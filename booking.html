@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt Hàng - Loli Bub</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>🍹 Loli Bub</h1>
+                <p>Nước ép & Trà trái cây tươi ngon</p>
+            </div>
+            <nav class="nav">
+                <a href="index.html" class="nav-link">Menu</a>
+                <a href="booking.html" class="nav-link active">Đặt Hàng</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main">
+        <section class="booking-section">
+            <div class="container">
+                <h2 class="section-title">Đặt Hàng</h2>
+                <p class="section-subtitle">Vui lòng điền thông tin và chọn món bạn muốn đặt</p>
+
+                <form id="booking-form" class="booking-form">
+                    <div class="form-group">
+                        <label for="customer-name">Họ và Tên *</label>
+                        <input type="text" id="customer-name" name="customerName" required placeholder="Nhập họ và tên">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Số Điện Thoại *</label>
+                        <input type="tel" id="phone" name="phone" required placeholder="Nhập số điện thoại">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address">Địa Chỉ Giao Hàng *</label>
+                        <textarea id="address" name="address" rows="3" required placeholder="Nhập địa chỉ giao hàng"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="note">Ghi Chú</label>
+                        <textarea id="note" name="note" rows="3" placeholder="Ghi chú thêm (nếu có)"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Chọn Món *</label>
+                        <div id="menu-selection" class="menu-selection">
+                            <!-- Menu items will be loaded here -->
+                        </div>
+                    </div>
+
+                    <div class="order-summary">
+                        <h3>Tổng Đơn Hàng</h3>
+                        <div id="order-items" class="order-items">
+                            <p class="empty-cart">Chưa có món nào được chọn</p>
+                        </div>
+                        <div class="order-total">
+                            <strong>Tổng Tiền: <span id="total-price">0</span> đ</strong>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-large btn-submit">
+                        Gửi Đơn Hàng Qua Zalo
+                    </button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Loli Bub. Tất cả quyền được bảo lưu.</p>
+        </div>
+    </footer>
+
+    <script src="menu.json"></script>
+    <script src="script.js"></script>
+</body>
+</html>
+

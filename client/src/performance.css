@@ -1,0 +1,58 @@
+/* Performance Optimization - Add to App.css or create separate file */
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* GPU acceleration hints */
+.menu-card,
+.menu-card-btn,
+.cart-toggle {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Optimize animations */
+@keyframes waterRipple {
+  0%, 100% {
+    transform: scale(1) translateZ(0);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05) translateZ(0);
+    opacity: 0.9;
+  }
+}
+
+@keyframes waterFlow {
+  0% {
+    transform: translateX(0) translateZ(0);
+  }
+  50% {
+    transform: translateX(10px) translateZ(0);
+  }
+  100% {
+    transform: translateX(0) translateZ(0);
+  }
+}
+
+/* Disable expensive effects on low-end devices */
+@media (max-width: 768px) {
+  .menu-card::before,
+  .menu-card::after {
+    display: none;
+  }
+  
+  .menu-card:hover {
+    transform: translateY(-4px);
+  }
+}
+

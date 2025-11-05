@@ -1,0 +1,114 @@
+{
+  "categories": [
+    {
+      "name": "Nước Ép Mix",
+      "price": 39000,
+      "items": [
+        {
+          "name": "Red Energy",
+          "price": 39000
+        },
+        {
+          "name": "Energy Boost",
+          "price": 39000
+        },
+        {
+          "name": "Green Vitality",
+          "price": 39000
+        },
+        {
+          "name": "Heart Shine",
+          "price": 39000
+        },
+        {
+          "name": "Green Detox",
+          "price": 39000
+        },
+        {
+          "name": "Refresh",
+          "price": 39000
+        },
+        {
+          "name": "Refresh Balance",
+          "price": 39000
+        }
+      ]
+    },
+    {
+      "name": "Nước Ép Nguyên Vị / Nước Ép Chai",
+      "price": 35000,
+      "items": [
+        {
+          "name": "Nước Ép Nguyên Vị / Nước Ép Chai",
+          "price": 35000
+        }
+      ]
+    },
+    {
+      "name": "Trà Trái Cây",
+      "price": 35000,
+      "items": [
+        {
+          "name": "Trà Đác Thơm",
+          "price": 35000
+        },
+        {
+          "name": "Trà Đào",
+          "price": 35000
+        },
+        {
+          "name": "Trà Atiso Đỏ",
+          "price": 35000
+        },
+        {
+          "name": "Trà Vải Hoa Anh Đào",
+          "price": 35000
+        }
+      ]
+    },
+    {
+      "name": "Trà Sữa",
+      "items": [
+        {
+          "name": "Trà Sữa Loli",
+          "price": 39000
+        },
+        {
+          "name": "Trà Sữa Truyền Thống",
+          "price": 35000
+        }
+      ]
+    },
+    {
+      "name": "Yogurt",
+      "items": [
+        {
+          "name": "Mix Ngũ Cốc Nướng",
+          "price": 35000
+        },
+        {
+          "name": "Trái Cây Tô Yogurt",
+          "price": 30000
+        }
+      ]
+    },
+    {
+      "name": "Cafe",
+      "items": [
+        {
+          "name": "Cafe Đen Đá",
+          "price": 20000
+        },
+        {
+          "name": "Cafe Sữa",
+          "price": 25000
+        },
+        {
+          "name": "Bạc Xíu",
+          "price": 25000
+        }
+      ]
+    }
+  ]
+}
+
