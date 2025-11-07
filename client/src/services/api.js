@@ -31,11 +31,16 @@ export const getMenu = async () => {
 };
 
 export const submitOrder = async (orderFormData) => {
-  const response = await axios.post(`${API_BASE_URL}/orders`, orderFormData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+  const isFormData = typeof FormData !== 'undefined' && orderFormData instanceof FormData;
+  const config = isFormData
+    ? {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    : {};
+
+  const response = await axios.post(`${API_BASE_URL}/orders`, orderFormData, config);
   return response.data;
 };
 

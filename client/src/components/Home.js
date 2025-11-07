@@ -156,8 +156,11 @@ function Home() {
             backgroundImage: `url('/images/background-hero.jpg')`
           }}
         ></div>
+        <div className="hero-logo" aria-hidden="true">
+          <img src="/images/logo.png" alt="" />
+        </div>
         <div className="container hero-content">
-          <h2 className="hero-title">💧 Menu Nước Uống Healthy</h2>
+          <h2 className="hero-title">Lolibub Nước Uống Tốt Cho Sức Khoẻ</h2>
           <p className="hero-subtitle">Tươi mát, tự nhiên, tốt cho sức khỏe của bạn</p>
         </div>
       </section>

@@ -13,7 +13,9 @@ function Header() {
     <header className="header">
       <div className="header-container">
         <div className="logo">
-          <img src="/images/logo.png" alt="Loli Bub Logo" className="logo-image" />
+          <div className="logo-badge">
+            <img src="/images/logo.png" alt="Loli Bub Logo" className="logo-image" />
+          </div>
           <div>
             <h1>Loli Bub</h1>
             <p>Healthy Drinks</p>

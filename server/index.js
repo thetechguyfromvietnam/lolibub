@@ -65,8 +65,9 @@ app.get('/api/menu', (req, res) => {
 // Send order to Zalo (with payment proof)
 app.post('/api/orders', upload.single('paymentProof'), async (req, res) => {
   try {
-    const { customerName, phone, address, note, items, total } = req.body;
+    const { customerName, phone, address, note, items, total, paymentMethod } = req.body;
     const paymentProofFile = req.file;
+    const resolvedPaymentMethod = (paymentMethod || 'bank_transfer').toLowerCase();
 
     // Validate
     if (!customerName || !phone || !address || !items || items.length === 0) {
@@ -74,7 +75,7 @@ app.post('/api/orders', upload.single('paymentProof'), async (req, res) => {
     }
 
     // Check if payment proof is required
-    if (!paymentProofFile) {
+    if (resolvedPaymentMethod === 'bank_transfer' && !paymentProofFile) {
       return res.status(400).json({ error: 'Vui lòng upload ảnh chứng từ chuyển khoản!' });
     }
 
@@ -89,7 +90,8 @@ app.post('/api/orders', upload.single('paymentProof'), async (req, res) => {
       note: note || '',
       items: itemsArray,
       total: parseFloat(total),
-      paymentProof: paymentProofFile.filename
+      paymentProof: paymentProofFile ? paymentProofFile.filename : null,
+      paymentMethod: resolvedPaymentMethod
     });
 
     // Send to Zalo
@@ -103,8 +105,9 @@ app.post('/api/orders', upload.single('paymentProof'), async (req, res) => {
       note: note || '',
       items: itemsArray,
       total: parseFloat(total),
-      paymentProof: paymentProofFile.filename,
-      paymentProofPath: paymentProofFile.path,
+      paymentMethod: resolvedPaymentMethod,
+      paymentProof: paymentProofFile ? paymentProofFile.filename : null,
+      paymentProofPath: paymentProofFile ? paymentProofFile.path : null,
       timestamp: new Date().toISOString()
     });
 
@@ -138,6 +141,11 @@ function createOrderMessage(orderData) {
   if (orderData.note) {
     message += `📝 *Ghi chú:* ${orderData.note}\n\n`;
   }
+
+  const paymentLabel = orderData.paymentMethod === 'cash'
+    ? 'Tiền mặt khi nhận hàng'
+    : 'Chuyển khoản';
+  message += `💳 *Thanh toán:* ${paymentLabel}\n`;
   
   message += `📋 *Chi tiết đơn hàng:*\n`;
   orderData.items.forEach((item, index) => {
@@ -147,9 +155,13 @@ function createOrderMessage(orderData) {
   
   message += `\n💰 *Tổng tiền:* ${formatPrice(orderData.total)} đ\n\n`;
   
-  if (orderData.paymentProof) {
+  if (orderData.paymentMethod === 'bank_transfer' && orderData.paymentProof) {
     message += `✅ *Đã nhận chứng từ chuyển khoản*\n`;
     message += `📎 File: ${orderData.paymentProof}\n\n`;
+  }
+
+  if (orderData.paymentMethod === 'cash') {
+    message += `💵 *Thu tiền mặt khi giao hàng*\n\n`;
   }
   
   message += `_Đơn hàng được đặt qua website_`;

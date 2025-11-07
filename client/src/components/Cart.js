@@ -40,7 +40,8 @@ function Cart() {
     phone: '',
     address: '',
     note: '',
-    paymentProof: null
+    paymentProof: null,
+    paymentMethod: 'bank_transfer'
   });
   const [showCheckout, setShowCheckout] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -59,14 +60,30 @@ function Cart() {
     setShowCheckout(true);
   };
 
+  const handlePaymentMethodChange = (method) => {
+    setFormData((prev) => ({
+      ...prev,
+      paymentMethod: method,
+      paymentProof: method === 'bank_transfer' ? prev.paymentProof : null
+    }));
+
+    if (method !== 'bank_transfer') {
+      setPaymentProofPreview(null);
+    }
+  };
+
   const handleFileChange = (e) => {
+    if (formData.paymentMethod !== 'bank_transfer') {
+      return;
+    }
+
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) { // 5MB limit
         setNotification({ type: 'error', message: 'Kích thước file không được vượt quá 5MB' });
         return;
       }
-      setFormData({ ...formData, paymentProof: file });
+      setFormData((prev) => ({ ...prev, paymentProof: file }));
       
       // Create preview
       const reader = new FileReader();
@@ -85,7 +102,7 @@ function Cart() {
       return;
     }
 
-    if (!formData.paymentProof) {
+    if (formData.paymentMethod === 'bank_transfer' && !formData.paymentProof) {
       setNotification({ type: 'error', message: 'Vui lòng upload ảnh chứng từ chuyển khoản!' });
       return;
     }
@@ -105,7 +122,11 @@ function Cart() {
         category: item.category
       }))));
       orderFormData.append('total', getTotalPrice());
-      orderFormData.append('paymentProof', formData.paymentProof);
+      orderFormData.append('paymentMethod', formData.paymentMethod);
+
+      if (formData.paymentMethod === 'bank_transfer' && formData.paymentProof) {
+        orderFormData.append('paymentProof', formData.paymentProof);
+      }
 
       const result = await submitOrder(orderFormData);
 
@@ -124,7 +145,8 @@ function Cart() {
         phone: '',
         address: '',
         note: '',
-        paymentProof: null
+        paymentProof: null,
+        paymentMethod: 'bank_transfer'
       });
       setPaymentProofPreview(null);
       clearCart();
@@ -295,53 +317,94 @@ function Cart() {
 
             <div className="payment-section">
               <h4>Thanh Toán</h4>
-              <div className="qr-code-section">
-                <p className="qr-instruction">Vui lòng quét mã QR để chuyển khoản:</p>
-                <div className="qr-code-wrapper">
-                  <img 
-                    src="/images/qr-code.jpg" 
-                    alt="QR Code Chuyển Khoản" 
-                    className="qr-code-image"
+              <div className="payment-method-options">
+                <label
+                  className={`payment-method-option ${formData.paymentMethod === 'bank_transfer' ? 'active' : ''}`}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="bank_transfer"
+                    checked={formData.paymentMethod === 'bank_transfer'}
+                    onChange={() => handlePaymentMethodChange('bank_transfer')}
                   />
-                </div>
-                <p className="qr-amount">Số tiền: <strong>{formatPrice(getTotalPrice())} đ</strong></p>
+                  <span className="payment-method-title">Chuyển khoản</span>
+                  <span className="payment-method-desc">Quét mã QR và tải chứng từ chuyển khoản</span>
+                </label>
+
+                <label
+                  className={`payment-method-option ${formData.paymentMethod === 'cash' ? 'active' : ''}`}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="cash"
+                    checked={formData.paymentMethod === 'cash'}
+                    onChange={() => handlePaymentMethodChange('cash')}
+                  />
+                  <span className="payment-method-title">Tiền mặt</span>
+                  <span className="payment-method-desc">Thanh toán trực tiếp khi nhận hàng</span>
+                </label>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="payment-proof">
-                  Upload Ảnh Chứng Từ Chuyển Khoản *
-                  <span className="required-note">(Bắt buộc)</span>
-                </label>
-                <div className="file-upload-wrapper">
-                  <input
-                    type="file"
-                    id="payment-proof"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="file-input"
-                    required
-                  />
-                  <label htmlFor="payment-proof" className="file-label">
-                    {paymentProofPreview ? '✓ Đã chọn ảnh' : 'Chọn ảnh chứng từ'}
-                  </label>
-                </div>
-                {paymentProofPreview && (
-                  <div className="payment-proof-preview">
-                    <img src={paymentProofPreview} alt="Chứng từ chuyển khoản" />
-                    <button
-                      type="button"
-                      className="remove-image-btn"
-                      onClick={() => {
-                        setFormData({ ...formData, paymentProof: null });
-                        setPaymentProofPreview(null);
-                      }}
-                    >
-                      ×
-                    </button>
+              {formData.paymentMethod === 'bank_transfer' ? (
+                <>
+                  <div className="qr-code-section">
+                    <p className="qr-instruction">Vui lòng quét mã QR để chuyển khoản:</p>
+                    <div className="qr-code-wrapper">
+                      <img 
+                        src="/images/qr-code.jpg" 
+                        alt="QR Code Chuyển Khoản" 
+                        className="qr-code-image"
+                      />
+                    </div>
+                    <p className="qr-amount">Số tiền: <strong>{formatPrice(getTotalPrice())} đ</strong></p>
                   </div>
-                )}
-                <p className="file-note">Chấp nhận: JPG, PNG, GIF (tối đa 5MB)</p>
-              </div>
+
+                  <div className="form-group">
+                    <label htmlFor="payment-proof">
+                      Upload Ảnh Chứng Từ Chuyển Khoản
+                      <span className="required-note">(Bắt buộc khi chuyển khoản)</span>
+                    </label>
+                    <div className="file-upload-wrapper">
+                      <input
+                        type="file"
+                        id="payment-proof"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="file-input"
+                        required={formData.paymentMethod === 'bank_transfer'}
+                      />
+                      <label htmlFor="payment-proof" className="file-label">
+                        {paymentProofPreview ? '✓ Đã chọn ảnh' : 'Chọn ảnh chứng từ'}
+                      </label>
+                    </div>
+                    {paymentProofPreview && (
+                      <div className="payment-proof-preview">
+                        <img src={paymentProofPreview} alt="Chứng từ chuyển khoản" />
+                        <button
+                          type="button"
+                          className="remove-image-btn"
+                          onClick={() => {
+                            setFormData((prev) => ({ ...prev, paymentProof: null }));
+                            setPaymentProofPreview(null);
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                    <p className="file-note">Chấp nhận: JPG, PNG, GIF (tối đa 5MB)</p>
+                  </div>
+                </>
+              ) : (
+                <div className="cash-payment-note">
+                  <p>
+                    Bạn sẽ thanh toán bằng tiền mặt khi nhận hàng. Vui lòng chuẩn bị số tiền{' '}
+                    <strong>{formatPrice(getTotalPrice())} đ</strong> để tiện cho việc giao nhận.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="checkout-actions">
@@ -351,7 +414,7 @@ function Cart() {
                 onClick={() => {
                   setShowCheckout(false);
                   setPaymentProofPreview(null);
-                  setFormData({ ...formData, paymentProof: null });
+                  setFormData((prev) => ({ ...prev, paymentProof: null }));
                 }}
               >
                 Quay Lại
@@ -359,7 +422,9 @@ function Cart() {
               <button
                 type="submit"
                 className="btn btn-primary"
-                disabled={submitting || !formData.paymentProof}
+                disabled={
+                  submitting || (formData.paymentMethod === 'bank_transfer' && !formData.paymentProof)
+                }
               >
                 {submitting ? 'Đang gửi...' : 'Xác Nhận Đơn Hàng'}
               </button>
