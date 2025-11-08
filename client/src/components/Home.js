@@ -3,6 +3,29 @@ import { useCart } from '../context/CartContext';
 import { getMenu } from '../services/api';
 import './Home.css';
 
+const ingredientTranslations = {
+  'táo': 'Apple',
+  'cà rốt': 'Carrot',
+  'củ dền': 'Beetroot',
+  'thơm': 'Pineapple',
+  'dứa': 'Pineapple',
+  'ổi': 'Guava',
+  'bạc hà': 'Mint',
+  'cải kale': 'Kale',
+  'tắc': 'Kumquat',
+  'dưa hấu': 'Watermelon',
+  'nho': 'Grape',
+  'dưa leo': 'Cucumber',
+  'cần tây': 'Celery'
+};
+
+const translateIngredients = (ingredients) => {
+  return ingredients.map((ingredient) => {
+    const key = ingredient.trim().toLowerCase();
+    return ingredientTranslations[key] || ingredient;
+  });
+};
+
 // Image mapping for different drink types
 const getDrinkImage = (category, name, index) => {
   // Nước Ép Mix
@@ -180,7 +203,12 @@ function Home() {
                 {category.items.map((item, itemIndex) => {
                   const drinkImage = getDrinkImage(category.name, item.name, itemIndex);
                   const drinkIcon = getDrinkIcon(category.name, item.name);
-                  const description = getDescription(category.name, item.name);
+                  const ingredients = Array.isArray(item.ingredients) ? item.ingredients : [];
+                  const ingredientTextVi = ingredients.join(' • ');
+                  const ingredientTextEn = translateIngredients(ingredients).join(' • ');
+                  const description = ingredients.length
+                    ? getDescription(category.name, item.name)
+                    : getDescription(category.name, item.name);
                   const tags = getTags(category.name, item.name);
                   
                   return (
@@ -211,9 +239,16 @@ function Home() {
                         
                         <div className="menu-card-price">{formatPrice(item.price)} đ</div>
                         
-                        <div className="menu-card-description">
-                          {description}
-                        </div>
+                        {ingredients.length > 0 ? (
+                          <div className="menu-card-ingredients">
+                            <div className="ingredients-line vi">{ingredientTextVi}</div>
+                            <div className="ingredients-line en">{ingredientTextEn}</div>
+                          </div>
+                        ) : (
+                          <div className="menu-card-description">
+                            {description}
+                          </div>
+                        )}
                         
                         {tags.length > 0 && (
                           <div className="menu-card-tags">

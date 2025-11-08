@@ -6,15 +6,30 @@
       "items": [
         {
           "name": "Red Energy",
-          "price": 39000
+          "price": 39000,
+          "ingredients": [
+            "Táo",
+            "Cà rốt",
+            "Củ dền"
+          ]
         },
         {
           "name": "Energy Boost",
-          "price": 39000
+          "price": 39000,
+          "ingredients": [
+            "Thơm",
+            "Cà rốt",
+            "Táo"
+          ]
         },
         {
           "name": "Green Vitality",
-          "price": 39000
+          "price": 39000,
+          "ingredients": [
+            "Táo",
+            "Cải kale",
+            "Tắc"
+          ]
         },
         {
           "name": "Heart Shine",
@@ -22,15 +37,39 @@
         },
         {
           "name": "Green Detox",
-          "price": 39000
+          "price": 39000,
+          "ingredients": [
+            "Ổi",
+            "Dứa",
+            "Bạc hà"
+          ]
         },
         {
           "name": "Refresh",
-          "price": 39000
+          "price": 39000,
+          "ingredients": [
+            "Nho",
+            "Dưa leo",
+            "Cần tây"
+          ]
         },
         {
-          "name": "Refresh Balance",
-          "price": 39000
+          "name": "Energy Recharge",
+          "price": 39000,
+          "ingredients": [
+            "Dưa hấu",
+            "Cà rốt",
+            "Cải kale"
+          ]
+        },
+        {
+          "name": "RF Balance",
+          "price": 39000,
+          "ingredients": [
+            "Táo",
+            "Cà rốt",
+            "Cần tây"
+          ]
         }
       ]
     },
