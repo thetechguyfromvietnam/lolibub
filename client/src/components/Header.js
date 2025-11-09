@@ -14,10 +14,10 @@ function Header() {
       <div className="header-container">
         <div className="logo">
           <div className="logo-badge">
-            <img src="/images/logo.png" alt="Loli Bub Logo" className="logo-image" />
+            <img src="/images/logo.png" alt="Lolibub Logo" className="logo-image" />
           </div>
           <div>
-            <h1>Loli Bub</h1>
+            <h1>Lolibub</h1>
             <p>Healthy Drinks</p>
           </div>
         </div>

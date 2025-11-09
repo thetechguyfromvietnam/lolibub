@@ -2,29 +2,7 @@ import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { submitOrder } from '../services/api';
 import './Cart.css';
-
-// Image mapping helper (same as Home)
-const getDrinkImage = (category, name) => {
-  if (category.includes('Ép Mix')) {
-    return '/images/juice.jpeg';
-  }
-  if (category.includes('Nguyên Vị')) {
-    return '/images/juice.jpeg';
-  }
-  if (category.includes('Trà Trái Cây')) {
-    return '/images/tea.jpeg';
-  }
-  if (category.includes('Trà Sữa')) {
-    return '/images/milk-tea.webp';
-  }
-  if (category.includes('Yogurt')) {
-    return '/images/yoghurt.webp';
-  }
-  if (category.includes('Cafe')) {
-    return '/images/ca-phe.jpeg';
-  }
-  return '/images/juice.jpeg';
-};
+import { resolveDrinkImage } from '../utils/imageAssets';
 
 function Cart() {
   const {
@@ -210,7 +188,7 @@ function Cart() {
                   <div className="cart-item-main-row">
                     <div className="cart-item-image-wrapper">
                       <img 
-                        src={getDrinkImage(item.category, item.name)} 
+                        src={resolveDrinkImage(item.category, item.name)}
                         alt={item.name}
                         className="cart-item-image"
                       />

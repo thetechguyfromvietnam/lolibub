@@ -4,7 +4,7 @@
 const ZALO_CONFIG = {
     // Cách 1: Sử dụng số điện thoại Zalo (khuyến nghị)
     // Ví dụ: '0912345678' (không có dấu cách, không có dấu +)
-    phone: 'YOUR_ZALO_PHONE',
+    phone: '0911091449',
     
     // Cách 2: Sử dụng Zalo Official Account ID
     // Nếu bạn có Zalo OA, điền ID tại đây

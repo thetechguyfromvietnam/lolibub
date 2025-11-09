@@ -3,9 +3,9 @@ const CONFIG = {
     // Zalo Official Account ID - Thay bằng OA ID của bạn
     zaloOAId: 'YOUR_ZALO_OA_ID',
     // Hoặc số điện thoại Zalo để mở chat
-    zaloPhone: 'YOUR_ZALO_PHONE',
+    zaloPhone: '0911091449',
     // Hoặc link Zalo chat trực tiếp
-    zaloChatLink: 'https://zalo.me/YOUR_ZALO_PHONE'
+    zaloChatLink: 'https://zalo.me/0911091449'
 };
 
 // Global variables

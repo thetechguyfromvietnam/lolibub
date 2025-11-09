@@ -1,6 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const formidable = require('formidable');
+const { google } = require('googleapis');
+const nodemailer = require('nodemailer');
+const ZALO_CONFIG = require('../config');
 
 module.exports = async (req, res) => {
   // Enable CORS
@@ -57,17 +60,23 @@ module.exports = async (req, res) => {
     // Send to Zalo
     const zaloResult = await sendToZalo(orderMessage, phone);
 
-    // Save order info (file is already in /tmp, will be cleaned up automatically)
-    const orderData = {
+    const orderRecord = {
       customerName,
       phone,
       address,
       note,
       items,
       total,
+      paymentMethod: 'bank_transfer',
       paymentProof: paymentProofFile.originalFilename,
+      paymentProofPath: paymentProofFile.filepath,
       timestamp: new Date().toISOString()
     };
+
+    await Promise.allSettled([
+      appendOrderToGoogleSheet(orderRecord),
+      sendOrderEmailNotification(orderRecord, orderMessage, zaloResult.link)
+    ]);
 
     // Try to save order to file (optional, for logging)
     try {
@@ -76,7 +85,7 @@ module.exports = async (req, res) => {
         fs.mkdirSync(ordersDir, { recursive: true });
       }
       const orderFile = path.join(ordersDir, `order_${Date.now()}.json`);
-      fs.writeFileSync(orderFile, JSON.stringify(orderData, null, 2), 'utf8');
+      fs.writeFileSync(orderFile, JSON.stringify(orderRecord, null, 2), 'utf8');
     } catch (fileError) {
       console.error('Error saving order file:', fileError);
       // Continue even if file save fails
@@ -130,10 +139,134 @@ function formatPrice(price) {
   return new Intl.NumberFormat('vi-VN').format(price);
 }
 
+async function appendOrderToGoogleSheet(orderData) {
+  const sheetsClientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+  const sheetsPrivateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY;
+  const spreadsheetId = process.env.GOOGLE_SHEETS_ID;
+
+  if (!sheetsClientEmail || !sheetsPrivateKey || !spreadsheetId) {
+    return;
+  }
+
+  try {
+    const auth = new google.auth.JWT(
+      sheetsClientEmail,
+      null,
+      sheetsPrivateKey.replace(/\\n/g, '\n'),
+      ['https://www.googleapis.com/auth/spreadsheets']
+    );
+
+    const sheets = google.sheets({ version: 'v4', auth });
+    const range = process.env.GOOGLE_SHEETS_RANGE || 'Orders!A:H';
+    const timestamp = orderData.timestamp || new Date().toISOString();
+
+    const itemsText = (orderData.items || [])
+      .map((item) => {
+        const name = item.name || 'Không rõ';
+        const category = item.category || 'Không rõ';
+        const quantity = item.quantity || 1;
+        const price = item.price || 0;
+        return `${name} (${category}) x${quantity} - ${formatPrice(price * quantity)} đ`;
+      })
+      .join('\n');
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: {
+        values: [[
+          timestamp,
+          orderData.customerName || '',
+          orderData.phone || '',
+          orderData.address || '',
+          orderData.note || '',
+          orderData.paymentMethod || '',
+          itemsText,
+          formatPrice(orderData.total || 0)
+        ]]
+      }
+    });
+  } catch (error) {
+    console.error('Failed to append order to Google Sheets:', error.message || error);
+  }
+}
+
+async function sendOrderEmailNotification(orderData, orderMessage, zaloLink) {
+  const emailUser = process.env.EMAIL_USER;
+  const emailPass = process.env.EMAIL_PASS;
+
+  if (!emailUser || !emailPass) {
+    return;
+  }
+
+  const emailHost = process.env.EMAIL_HOST || 'smtp.gmail.com';
+  const emailPort = parseInt(process.env.EMAIL_PORT || '465', 10);
+  const emailFrom = process.env.EMAIL_FROM || emailUser;
+  const emailRecipients = (process.env.EMAIL_TO || 'lolibub688@gmail.com')
+    .split(',')
+    .map((recipient) => recipient.trim())
+    .filter(Boolean);
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: emailHost,
+      port: emailPort,
+      secure: emailPort === 465,
+      auth: {
+        user: emailUser,
+        pass: emailPass
+      }
+    });
+
+    const itemsHtml = (orderData.items || [])
+      .map((item) => {
+        const name = item.name || 'Không rõ';
+        const category = item.category || 'Không rõ';
+        const quantity = item.quantity || 1;
+        const price = item.price || 0;
+        return `<li><strong>${name}</strong> (${category}) x${quantity} - ${formatPrice(price * quantity)} đ</li>`;
+      })
+      .join('');
+
+    const attachments = [];
+    if (orderData.paymentProofPath && fs.existsSync(orderData.paymentProofPath)) {
+      attachments.push({
+        filename: orderData.paymentProof || 'payment-proof.jpg',
+        path: orderData.paymentProofPath
+      });
+    }
+
+    await transporter.sendMail({
+      from: emailFrom,
+      to: emailRecipients,
+      subject: `Đơn hàng mới từ ${orderData.customerName || 'Khách hàng'}`,
+      text: orderMessage ? orderMessage.replace(/\*/g, '') : 'Đơn hàng mới',
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <h2 style="margin-bottom: 12px;">Đơn hàng mới từ ${orderData.customerName || 'Khách hàng'}</h2>
+          <p><strong>Số điện thoại:</strong> ${orderData.phone || ''}</p>
+          <p><strong>Địa chỉ:</strong> ${orderData.address || ''}</p>
+          ${orderData.note ? `<p><strong>Ghi chú:</strong> ${orderData.note}</p>` : ''}
+          <p><strong>Hình thức thanh toán:</strong> ${orderData.paymentMethod === 'cash' ? 'Tiền mặt' : 'Chuyển khoản'}</p>
+          <p><strong>Chi tiết đơn hàng:</strong></p>
+          <ul>${itemsHtml}</ul>
+          <p><strong>Tổng tiền:</strong> ${formatPrice(orderData.total || 0)} đ</p>
+          ${zaloLink ? `<p><a href="${zaloLink}" target="_blank" rel="noopener noreferrer">Mở tin nhắn Zalo</a></p>` : ''}
+          <p style="margin-top: 20px; font-size: 12px; color: #888;">Email tự động từ hệ thống Lolibub.</p>
+        </div>
+      `,
+      attachments
+    });
+  } catch (error) {
+    console.error('Failed to send order email:', error.message || error);
+  }
+}
+
 // Send to Zalo
 async function sendToZalo(message, phone) {
-  const zaloPhone = process.env.ZALO_PHONE || '';
-  const zaloOAId = process.env.ZALO_OA_ID || '';
+  const zaloPhone = process.env.ZALO_PHONE || (ZALO_CONFIG && ZALO_CONFIG.phone) || '';
+  const zaloOAId = process.env.ZALO_OA_ID || (ZALO_CONFIG && ZALO_CONFIG.oaId) || '';
   
   if (!zaloPhone && !zaloOAId) {
     return {
