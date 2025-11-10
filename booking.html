@@ -28,46 +28,52 @@
                 <p class="section-subtitle">Vui lòng điền thông tin và chọn món bạn muốn đặt</p>
 
                 <form id="booking-form" class="booking-form" method="POST">
-                    <div class="form-group">
-                        <label for="customer-name">Họ và Tên *</label>
-                        <input type="text" id="customer-name" name="customerName" required placeholder="Nhập họ và tên">
-                    </div>
+                    <div class="booking-form-grid">
+                        <div class="booking-form-main">
+                            <div class="form-group">
+                                <label for="customer-name">Họ và Tên *</label>
+                                <input type="text" id="customer-name" name="customerName" required placeholder="Nhập họ và tên">
+                            </div>
 
-                    <div class="form-group">
-                        <label for="phone">Số Điện Thoại *</label>
-                        <input type="tel" id="phone" name="phone" required placeholder="Nhập số điện thoại">
-                    </div>
+                            <div class="form-group">
+                                <label for="phone">Số Điện Thoại *</label>
+                                <input type="tel" id="phone" name="phone" required placeholder="Nhập số điện thoại">
+                            </div>
 
-                    <div class="form-group">
-                        <label for="address">Địa Chỉ Giao Hàng *</label>
-                        <textarea id="address" name="address" rows="3" required placeholder="Nhập địa chỉ giao hàng"></textarea>
-                    </div>
+                            <div class="form-group">
+                                <label for="address">Địa Chỉ Giao Hàng *</label>
+                                <textarea id="address" name="address" rows="3" required placeholder="Nhập địa chỉ giao hàng"></textarea>
+                            </div>
 
-                    <div class="form-group">
-                        <label for="note">Ghi Chú</label>
-                        <textarea id="note" name="note" rows="3" placeholder="Ghi chú thêm (nếu có)"></textarea>
-                    </div>
+                            <div class="form-group">
+                                <label for="note">Ghi Chú</label>
+                                <textarea id="note" name="note" rows="3" placeholder="Ghi chú thêm (nếu có)"></textarea>
+                            </div>
 
-                    <div class="form-group">
-                        <label>Chọn Món *</label>
-                        <div id="menu-selection" class="menu-selection">
-                            <!-- Menu items will be loaded here -->
+                            <div class="form-group">
+                                <label>Chọn Món *</label>
+                                <div id="menu-selection" class="menu-selection">
+                                    <!-- Menu items will be loaded here -->
+                                </div>
+                            </div>
                         </div>
+
+                        <aside class="order-summary">
+                            <h3>Tổng Đơn Hàng</h3>
+                            <div id="order-items" class="order-items">
+                                <p class="empty-cart">Chưa có món nào được chọn</p>
+                            </div>
+                            <div class="order-total">
+                                <strong>Tổng Tiền: <span id="total-price">0</span> đ</strong>
+                            </div>
+                        </aside>
                     </div>
 
-                    <div class="order-summary">
-                        <h3>Tổng Đơn Hàng</h3>
-                        <div id="order-items" class="order-items">
-                            <p class="empty-cart">Chưa có món nào được chọn</p>
-                        </div>
-                        <div class="order-total">
-                            <strong>Tổng Tiền: <span id="total-price">0</span> đ</strong>
-                        </div>
+                    <div class="booking-form-actions">
+                        <button type="submit" class="btn btn-primary btn-large btn-submit">
+                            Gửi Đơn Hàng Qua Formsheet
+                        </button>
                     </div>
-
-                    <button type="submit" class="btn btn-primary btn-large btn-submit">
-                        Gửi Đơn Hàng Qua Formsheet
-                    </button>
                 </form>
             </div>
         </section>

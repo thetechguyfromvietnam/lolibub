@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const formidable = require('formidable');
+const { formidable } = require('formidable');
 const { google } = require('googleapis');
 const axios = require('axios');
 
@@ -26,21 +26,35 @@ module.exports = async (req, res) => {
       uploadDir: '/tmp' // Vercel serverless functions use /tmp
     });
 
-    const [fields, files] = await form.parse(req);
+    const { fields, files } = await form.parse(req);
+
+    const getFieldValue = (value) => {
+      if (Array.isArray(value)) {
+        return value[0];
+      }
+      return value;
+    };
+
+    const getFileValue = (value) => {
+      if (Array.isArray(value)) {
+        return value[0];
+      }
+      return value;
+    };
     
-    const customerName = fields.customerName?.[0];
-    const phone = fields.phone?.[0];
-    const address = fields.address?.[0];
-    const note = fields.note?.[0] || '';
-    const resolvedPaymentMethod = fields.paymentMethod?.[0]?.toLowerCase() || 'bank_transfer';
+    const customerName = getFieldValue(fields.customerName);
+    const phone = getFieldValue(fields.phone);
+    const address = getFieldValue(fields.address);
+    const note = getFieldValue(fields.note) || '';
+    const resolvedPaymentMethod = getFieldValue(fields.paymentMethod)?.toLowerCase() || 'bank_transfer';
     let items;
     try {
-      items = JSON.parse(fields.items?.[0] || '[]');
+      items = JSON.parse(getFieldValue(fields.items) || '[]');
     } catch (parseError) {
       return res.status(400).json({ error: 'Danh sách món không hợp lệ' });
     }
-    const total = parseFloat(fields.total?.[0] || '0');
-    const paymentProofFile = files.paymentProof?.[0];
+    const total = parseFloat(getFieldValue(fields.total) || '0');
+    const paymentProofFile = getFileValue(files.paymentProof);
 
     // Validate
     if (!customerName || !phone || !address || !Array.isArray(items) || items.length === 0) {
