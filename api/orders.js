@@ -2,8 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const formidable = require('formidable');
 const { google } = require('googleapis');
-const nodemailer = require('nodemailer');
-const ZALO_CONFIG = require('../config');
+const axios = require('axios');
 
 module.exports = async (req, res) => {
   // Enable CORS
@@ -33,16 +32,22 @@ module.exports = async (req, res) => {
     const phone = fields.phone?.[0];
     const address = fields.address?.[0];
     const note = fields.note?.[0] || '';
-    const items = JSON.parse(fields.items?.[0] || '[]');
+    const resolvedPaymentMethod = fields.paymentMethod?.[0]?.toLowerCase() || 'bank_transfer';
+    let items;
+    try {
+      items = JSON.parse(fields.items?.[0] || '[]');
+    } catch (parseError) {
+      return res.status(400).json({ error: 'Danh sách món không hợp lệ' });
+    }
     const total = parseFloat(fields.total?.[0] || '0');
     const paymentProofFile = files.paymentProof?.[0];
 
     // Validate
-    if (!customerName || !phone || !address || !items || items.length === 0) {
+    if (!customerName || !phone || !address || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'Thông tin đơn hàng không đầy đủ' });
     }
 
-    if (!paymentProofFile) {
+    if (resolvedPaymentMethod === 'bank_transfer' && !paymentProofFile) {
       return res.status(400).json({ error: 'Vui lòng upload ảnh chứng từ chuyển khoản!' });
     }
 
@@ -54,11 +59,9 @@ module.exports = async (req, res) => {
       note,
       items,
       total,
-      paymentProof: paymentProofFile.originalFilename || 'payment-proof.jpg'
+      paymentProof: paymentProofFile ? (paymentProofFile.originalFilename || 'payment-proof.jpg') : null,
+      paymentMethod: resolvedPaymentMethod
     });
-
-    // Send to Zalo
-    const zaloResult = await sendToZalo(orderMessage, phone);
 
     const orderRecord = {
       customerName,
@@ -67,16 +70,29 @@ module.exports = async (req, res) => {
       note,
       items,
       total,
-      paymentMethod: 'bank_transfer',
-      paymentProof: paymentProofFile.originalFilename,
-      paymentProofPath: paymentProofFile.filepath,
+      paymentMethod: resolvedPaymentMethod,
+      paymentProof: paymentProofFile ? paymentProofFile.originalFilename : null,
+      paymentProofPath: paymentProofFile ? paymentProofFile.filepath : null,
       timestamp: new Date().toISOString()
     };
 
-    await Promise.allSettled([
+    const [sheetResult, notificationResult] = await Promise.allSettled([
       appendOrderToGoogleSheet(orderRecord),
-      sendOrderEmailNotification(orderRecord, orderMessage, zaloResult.link)
+      sendOrderNotification(orderRecord, orderMessage)
     ]);
+
+    if (notificationResult.status === 'rejected') {
+      console.error('Failed to send order notification email:', notificationResult.reason);
+
+      if (paymentProofFile && paymentProofFile.filepath && fs.existsSync(paymentProofFile.filepath)) {
+        fs.unlinkSync(paymentProofFile.filepath);
+      }
+
+      return res.status(502).json({
+        success: false,
+        error: 'Không thể gửi đơn hàng về email nhận thông báo. Vui lòng thử lại sau.'
+      });
+    }
 
     // Try to save order to file (optional, for logging)
     try {
@@ -94,7 +110,6 @@ module.exports = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Đơn hàng đã được gửi thành công! Bếp sẽ xác nhận sau khi kiểm tra chứng từ.',
-      zaloLink: zaloResult.link,
       orderMessage: orderMessage
     });
   } catch (error) {
@@ -115,6 +130,11 @@ function createOrderMessage(orderData) {
   if (orderData.note) {
     message += `📝 *Ghi chú:* ${orderData.note}\n\n`;
   }
+
+  const paymentLabel = orderData.paymentMethod === 'cash'
+    ? 'Tiền mặt khi nhận hàng'
+    : 'Chuyển khoản';
+  message += `💳 *Thanh toán:* ${paymentLabel}\n`;
   
   message += `📋 *Chi tiết đơn hàng:*\n`;
   orderData.items.forEach((item, index) => {
@@ -124,11 +144,15 @@ function createOrderMessage(orderData) {
   
   message += `\n💰 *Tổng tiền:* ${formatPrice(orderData.total)} đ\n\n`;
   
-  if (orderData.paymentProof) {
+  if (orderData.paymentMethod === 'bank_transfer' && orderData.paymentProof) {
     message += `✅ *Đã nhận chứng từ chuyển khoản*\n`;
     message += `📎 File: ${orderData.paymentProof}\n\n`;
   }
   
+  if (orderData.paymentMethod === 'cash') {
+    message += `💵 *Thu tiền mặt khi giao hàng*\n\n`;
+  }
+
   message += `_Đơn hàng được đặt qua website_`;
   
   return message;
@@ -192,99 +216,66 @@ async function appendOrderToGoogleSheet(orderData) {
   }
 }
 
-async function sendOrderEmailNotification(orderData, orderMessage, zaloLink) {
-  const emailUser = process.env.EMAIL_USER;
-  const emailPass = process.env.EMAIL_PASS;
+async function sendOrderNotification(orderData, orderMessage) {
+  const formspreeEndpoint = getFormspreeEndpoint();
 
-  if (!emailUser || !emailPass) {
+  if (!formspreeEndpoint) {
     return;
   }
 
-  const emailHost = process.env.EMAIL_HOST || 'smtp.gmail.com';
-  const emailPort = parseInt(process.env.EMAIL_PORT || '465', 10);
-  const emailFrom = process.env.EMAIL_FROM || emailUser;
-  const emailRecipients = (process.env.EMAIL_TO || 'lolibub688@gmail.com')
+  const recipients = (process.env.EMAIL_TO || 'lolibub688@gmail.com')
     .split(',')
     .map((recipient) => recipient.trim())
     .filter(Boolean);
 
-  try {
-    const transporter = nodemailer.createTransport({
-      host: emailHost,
-      port: emailPort,
-      secure: emailPort === 465,
-      auth: {
-        user: emailUser,
-        pass: emailPass
+  const itemsText = (orderData.items || [])
+    .map((item) => {
+      const name = item.name || 'Không rõ';
+      const category = item.category || 'Không rõ';
+      const quantity = item.quantity || 1;
+      const price = item.price || 0;
+      return `- ${name} (${category}) x${quantity} = ${formatPrice(price * quantity)} đ`;
+    })
+    .join('\n');
+
+  const message = [
+    `Đơn hàng mới từ ${orderData.customerName || 'Khách hàng'}`,
+    `SĐT: ${orderData.phone || ''}`,
+    `Địa chỉ: ${orderData.address || ''}`,
+    orderData.note ? `Ghi chú: ${orderData.note}` : null,
+    `Hình thức thanh toán: ${
+      orderData.paymentMethod === 'cash' ? 'Tiền mặt' : 'Chuyển khoản'
+    }`,
+    '',
+    'Chi tiết:',
+    itemsText || '(Không có mặt hàng)',
+    '',
+    `Tổng tiền: ${formatPrice(orderData.total || 0)} đ`,
+    orderData.paymentProofPath
+      ? `Chứng từ lưu tại: ${orderData.paymentProofPath}`
+      : null,
+    '',
+    'Email tự động từ hệ thống Lolibub.'
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  await axios.post(
+    formspreeEndpoint,
+    {
+      email: recipients[0] || 'lolibub688@gmail.com',
+      message,
+      ...(orderMessage ? { summary: orderMessage.replace(/\*/g, '') } : {})
+    },
+    {
+      headers: {
+        Accept: 'application/json'
       }
-    });
-
-    const itemsHtml = (orderData.items || [])
-      .map((item) => {
-        const name = item.name || 'Không rõ';
-        const category = item.category || 'Không rõ';
-        const quantity = item.quantity || 1;
-        const price = item.price || 0;
-        return `<li><strong>${name}</strong> (${category}) x${quantity} - ${formatPrice(price * quantity)} đ</li>`;
-      })
-      .join('');
-
-    const attachments = [];
-    if (orderData.paymentProofPath && fs.existsSync(orderData.paymentProofPath)) {
-      attachments.push({
-        filename: orderData.paymentProof || 'payment-proof.jpg',
-        path: orderData.paymentProofPath
-      });
     }
-
-    await transporter.sendMail({
-      from: emailFrom,
-      to: emailRecipients,
-      subject: `Đơn hàng mới từ ${orderData.customerName || 'Khách hàng'}`,
-      text: orderMessage ? orderMessage.replace(/\*/g, '') : 'Đơn hàng mới',
-      html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-          <h2 style="margin-bottom: 12px;">Đơn hàng mới từ ${orderData.customerName || 'Khách hàng'}</h2>
-          <p><strong>Số điện thoại:</strong> ${orderData.phone || ''}</p>
-          <p><strong>Địa chỉ:</strong> ${orderData.address || ''}</p>
-          ${orderData.note ? `<p><strong>Ghi chú:</strong> ${orderData.note}</p>` : ''}
-          <p><strong>Hình thức thanh toán:</strong> ${orderData.paymentMethod === 'cash' ? 'Tiền mặt' : 'Chuyển khoản'}</p>
-          <p><strong>Chi tiết đơn hàng:</strong></p>
-          <ul>${itemsHtml}</ul>
-          <p><strong>Tổng tiền:</strong> ${formatPrice(orderData.total || 0)} đ</p>
-          ${zaloLink ? `<p><a href="${zaloLink}" target="_blank" rel="noopener noreferrer">Mở tin nhắn Zalo</a></p>` : ''}
-          <p style="margin-top: 20px; font-size: 12px; color: #888;">Email tự động từ hệ thống Lolibub.</p>
-        </div>
-      `,
-      attachments
-    });
-  } catch (error) {
-    console.error('Failed to send order email:', error.message || error);
-  }
+  );
 }
 
-// Send to Zalo
-async function sendToZalo(message, phone) {
-  const zaloPhone = process.env.ZALO_PHONE || (ZALO_CONFIG && ZALO_CONFIG.phone) || '';
-  const zaloOAId = process.env.ZALO_OA_ID || (ZALO_CONFIG && ZALO_CONFIG.oaId) || '';
-  
-  if (!zaloPhone && !zaloOAId) {
-    return {
-      success: false,
-      message: 'Chưa cấu hình Zalo. Vui lòng cấu hình trong Vercel Environment Variables',
-      link: null
-    };
-  }
-
-  const encodedMessage = encodeURIComponent(message);
-  const targetId = zaloPhone || zaloOAId;
-  const cleanTargetId = targetId.replace(/[\s\-\(\)]/g, '');
-  const zaloLink = `https://zalo.me/${cleanTargetId}?text=${encodedMessage}`;
-
-  return {
-    success: true,
-    link: zaloLink,
-    message: 'Đơn hàng đã được gửi!'
-  };
+function getFormspreeEndpoint() {
+  return process.env.FORMSPREE_ENDPOINT || 'https://formspree.io/f/xblqrapp';
 }
 

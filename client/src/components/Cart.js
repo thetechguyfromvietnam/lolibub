@@ -108,13 +108,13 @@ function Cart() {
 
       const result = await submitOrder(orderFormData);
 
-      if (result.zaloLink) {
-        window.open(result.zaloLink, '_blank');
+      if (!result?.success) {
+        throw new Error(result?.error || 'Đơn hàng chưa được gửi về email nhận thông báo');
       }
 
       setNotification({
         type: 'success',
-        message: 'Đơn hàng đã được gửi thành công! Bếp sẽ xác nhận sau khi kiểm tra chứng từ.'
+        message: 'Đơn hàng đã được gửi thành công! Thông tin đã được gửi đến Formsheet.'
       });
 
       // Reset form and cart
@@ -137,7 +137,10 @@ function Cart() {
     } catch (error) {
       setNotification({
         type: 'error',
-        message: error.response?.data?.error || 'Có lỗi xảy ra khi gửi đơn hàng'
+        message:
+          error.response?.data?.error ||
+          error.message ||
+          'Có lỗi xảy ra khi gửi đơn hàng'
       });
     } finally {
       setSubmitting(false);
@@ -232,7 +235,7 @@ function Cart() {
             </div>
           </>
         ) : (
-          <form className="checkout-form" onSubmit={handleSubmit}>
+          <form className="checkout-form" onSubmit={handleSubmit} method="POST">
             <div className="form-group">
               <label htmlFor="checkout-name">Họ và Tên *</label>
               <input

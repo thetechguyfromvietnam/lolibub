@@ -28,7 +28,6 @@
     "googleapis": "^118.0.0",
     "formidable": "^3.5.1",
     "multer": "^2.0.2",
-    "nodemailer": "^6.9.8",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

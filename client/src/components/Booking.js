@@ -137,13 +137,13 @@ function Booking() {
 
       const result = await submitOrder(orderFormData);
 
-      if (result.zaloLink) {
-        window.open(result.zaloLink, '_blank');
+      if (!result?.success) {
+        throw new Error(result?.error || 'Đơn hàng chưa được gửi về email nhận thông báo');
       }
 
       setNotification({ 
         type: 'success', 
-        message: 'Đơn hàng đã được gửi thành công! Vui lòng kiểm tra Zalo.' 
+        message: 'Đơn hàng đã được gửi thành công! Thông tin đã được gửi đến Formsheet.' 
       });
 
       // Reset form
@@ -164,7 +164,7 @@ function Booking() {
     } catch (error) {
       setNotification({ 
         type: 'error', 
-        message: error.response?.data?.error || 'Có lỗi xảy ra khi gửi đơn hàng' 
+        message: error.response?.data?.error || error.message || 'Có lỗi xảy ra khi gửi đơn hàng' 
       });
     } finally {
       setSubmitting(false);
@@ -199,7 +199,7 @@ function Booking() {
             Vui lòng điền thông tin và chọn món bạn muốn đặt
           </p>
 
-          <form onSubmit={handleSubmit} className="booking-form">
+          <form onSubmit={handleSubmit} className="booking-form" method="POST">
             <div className="form-group">
               <label htmlFor="customer-name">Họ và Tên *</label>
               <input
@@ -355,7 +355,7 @@ function Booking() {
                       <div
                         key={`${category.name}-${itemIndex}`}
                         className={`menu-option ${isSelected ? 'selected' : ''}`}
-                        onClick={() => !isSelected && toggleItemSelection(itemId, item, category.name)}
+                        onClick={() => toggleItemSelection(itemId, item, category.name)}
                       >
                         <div className="menu-option-header">
                           <span className="menu-option-name">{item.name}</span>
@@ -430,7 +430,7 @@ function Booking() {
               className="btn btn-primary btn-large btn-submit"
               disabled={submitting}
             >
-              {submitting ? 'Đang gửi...' : 'Gửi Đơn Hàng Qua Zalo'}
+              {submitting ? 'Đang gửi...' : 'Gửi Đơn Hàng Qua Formsheet'}
             </button>
           </form>
         </div>

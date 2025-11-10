@@ -77,6 +77,7 @@ function Home() {
   const [error, setError] = useState(null);
   const { addToCart } = useCart();
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
+  const [activeCardId, setActiveCardId] = useState(null);
 
   const totalHeroSlides = heroBackgrounds.length;
 
@@ -113,6 +114,10 @@ function Home() {
 
   const handleAddToCart = (item, category) => {
     addToCart(item, category);
+  };
+
+  const handleCardTouch = (cardId) => {
+    setActiveCardId((prev) => (prev === cardId ? null : cardId));
   };
 
   if (loading) {
@@ -179,12 +184,13 @@ function Home() {
                   const description = ingredients.length
                     ? getDescription(category.name, item.name)
                     : getDescription(category.name, item.name);
+                  const cardId = `${catIndex}-${itemIndex}`;
                   
                   return (
                     <div
                       key={itemIndex}
-                      className="menu-card"
-                      onClick={() => handleAddToCart(item, category.name)}
+                      className={`menu-card ${activeCardId === cardId ? 'overlay-hidden' : ''}`}
+                      onTouchEnd={() => handleCardTouch(cardId)}
                     >
                       <div className="menu-card-badge">{item.name}</div>
 
@@ -218,7 +224,12 @@ function Home() {
                                 {description}
                               </div>
                             )}
-                            <button className="menu-card-btn">
+                            <button
+                              className="menu-card-btn"
+                              type="button"
+                              aria-label={`Thêm ${item.name} vào giỏ hàng`}
+                              onClick={() => handleAddToCart(item, category.name)}
+                            >
                               Thêm Vào Giỏ
                             </button>
                           </div>
