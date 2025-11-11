@@ -26,7 +26,7 @@ module.exports = async (req, res) => {
       uploadDir: '/tmp' // Vercel serverless functions use /tmp
     });
 
-    const { fields, files } = await form.parse(req);
+    const [fields, files] = await form.parse(req);
 
     const getFieldValue = (value) => {
       if (Array.isArray(value)) {
