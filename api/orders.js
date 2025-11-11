@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
       return value;
     };
     
-    const customerName = getFieldValue(fields.customerName);
+    const customerName = getFieldValue(fields.customerName) || 'Khách hàng';
     const phone = getFieldValue(fields.phone);
     const address = getFieldValue(fields.address);
     const note = getFieldValue(fields.note) || '';
@@ -57,7 +57,7 @@ module.exports = async (req, res) => {
     const paymentProofFile = getFileValue(files.paymentProof);
 
     // Validate
-    if (!customerName || !phone || !address || !Array.isArray(items) || items.length === 0) {
+    if (!phone || !address || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'Thông tin đơn hàng không đầy đủ' });
     }
 
