@@ -135,35 +135,50 @@ module.exports = async (req, res) => {
 };
 
 // Helper function to create order message
-function createOrderMessage(orderData) {
-  let message = `🍹 *ĐƠN HÀNG LOLI BUB*\n\n`;
-  message += `👤 *Khách hàng:* ${orderData.customerName}\n`;
-  message += `📞 *SĐT:* ${orderData.phone}\n`;
-  message += `📍 *Địa chỉ:* ${orderData.address}\n\n`;
-  
-  if (orderData.note) {
-    message += `📝 *Ghi chú:* ${orderData.note}\n\n`;
+function createOrderMessage(orderData = {}) {
+  const {
+    customerName = 'Khách hàng',
+    phone = '',
+    address = '',
+    note = '',
+    items = [],
+    total = 0,
+    paymentMethod = 'bank_transfer',
+    paymentProof = null
+  } = orderData || {};
+
+  if (!Array.isArray(items)) {
+    throw new Error('Invalid order items payload');
   }
 
-  const paymentLabel = orderData.paymentMethod === 'cash'
+  let message = `🍹 *ĐƠN HÀNG LOLI BUB*\n\n`;
+  message += `👤 *Khách hàng:* ${customerName}\n`;
+  message += `📞 *SĐT:* ${phone}\n`;
+  message += `📍 *Địa chỉ:* ${address}\n\n`;
+  
+  if (note) {
+    message += `📝 *Ghi chú:* ${note}\n\n`;
+  }
+
+  const paymentLabel = paymentMethod === 'cash'
     ? 'Tiền mặt khi nhận hàng'
     : 'Chuyển khoản';
   message += `💳 *Thanh toán:* ${paymentLabel}\n`;
   
   message += `📋 *Chi tiết đơn hàng:*\n`;
-  orderData.items.forEach((item, index) => {
+  items.forEach((item, index) => {
     message += `${index + 1}. ${item.name} (${item.category})\n`;
     message += `   Số lượng: ${item.quantity} x ${formatPrice(item.price)} đ = ${formatPrice(item.price * item.quantity)} đ\n`;
   });
   
-  message += `\n💰 *Tổng tiền:* ${formatPrice(orderData.total)} đ\n\n`;
+  message += `\n💰 *Tổng tiền:* ${formatPrice(total)} đ\n\n`;
   
-  if (orderData.paymentMethod === 'bank_transfer' && orderData.paymentProof) {
+  if (paymentMethod === 'bank_transfer' && paymentProof) {
     message += `✅ *Đã nhận chứng từ chuyển khoản*\n`;
-    message += `📎 File: ${orderData.paymentProof}\n\n`;
+    message += `📎 File: ${paymentProof}\n\n`;
   }
   
-  if (orderData.paymentMethod === 'cash') {
+  if (paymentMethod === 'cash') {
     message += `💵 *Thu tiền mặt khi giao hàng*\n\n`;
   }
 
