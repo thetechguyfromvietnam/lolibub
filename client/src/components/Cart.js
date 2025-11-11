@@ -390,7 +390,7 @@ function Cart() {
 
             <div className="checkout-actions">
               <button
-                type="button"
+                  type="button"
                 className="btn btn-secondary"
                 onClick={() => {
                   setShowCheckout(false);

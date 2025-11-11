@@ -260,7 +260,7 @@ async function sendOrderNotification(orderData, orderMessage) {
     return;
   }
 
-  const recipients = (process.env.EMAIL_TO || 'lolibub688@gmail.com')
+  const recipients = (process.env.EMAIL_TO || 'thestoriesguys@gmail.com')
     .split(',')
     .map((recipient) => recipient.trim())
     .filter(Boolean);
@@ -300,7 +300,7 @@ async function sendOrderNotification(orderData, orderMessage) {
   await axios.post(
     formspreeEndpoint,
     {
-      email: recipients[0] || 'lolibub688@gmail.com',
+      email: recipients[0] || 'thestoriesguys@gmail.com',
       message,
       ...(orderMessage ? { summary: orderMessage.replace(/\*/g, '') } : {})
     },
@@ -324,7 +324,7 @@ function saveOrderToFile(orderData) {
 }
 
 function getFormspreeEndpoint() {
-  return process.env.FORMSPREE_ENDPOINT || 'https://formspree.io/f/xblqrapp';
+  return process.env.FORMSPREE_ENDPOINT || 'https://formspree.io/f/xqawzddv';
 }
 
 // Catch all handler: send back React's index.html file

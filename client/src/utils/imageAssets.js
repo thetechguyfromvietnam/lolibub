@@ -24,8 +24,8 @@ const drinkImagesByName = {
   'trà vải hoa anh đào': '/images/tra-hoa-anh-dao.jpg',
   'trà sữa loli': '/images/tra-sua.jpg',
   'trà sữa truyền thống': '/images/tra-sua.jpg',
-  'mix ngũ cốc nướng': '/images/trai-cay-to.jpg',
-  'trái cây tô yogurt': '/images/trai-cay-to.jpg',
+  'mix ngũ cốc nướng': '/images/trai-cay-to.png',
+  'trái cây tô yogurt': '/images/trai-cay-to.png',
   'cafe đen đá': '/images/ca-phe-den.jpg',
   'cafe sữa': '/images/ca-phe-sua.jpg',
   'bạc xíu': '/images/bac-xiu.jpg'
@@ -73,7 +73,7 @@ export function resolveDrinkImage(category = '', name = '', index = 0) {
   }
 
   if (normalizedCategory.includes('yogurt')) {
-    return '/images/trai-cay-to.jpg';
+    return '/images/trai-cay-to.png';
   }
 
   if (normalizedCategory.includes('cafe')) {

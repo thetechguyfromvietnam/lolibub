@@ -33,7 +33,12 @@
         },
         {
           "name": "Heart Shine",
-          "price": 39000
+          "price": 39000,
+          "ingredients": [
+            "Cà rốt",
+            "Táo",
+            "Cần tây"
+          ]
         },
         {
           "name": "Green Detox",
@@ -100,11 +105,13 @@
       "items": [
         {
           "name": "Trà Sữa Loli",
-          "price": 39000
+          "price": 39000,
+          "description": "Trà sữa thơm béo, vị ngọt dịu dễ uống."
         },
         {
           "name": "Trà Sữa Truyền Thống",
-          "price": 35000
+          "price": 35000,
+          "description": "Trà sữa truyền thống đậm đà, hậu vị trà rõ."
         }
       ]
     },
@@ -113,11 +120,13 @@
       "items": [
         {
           "name": "Mix Ngũ Cốc Nướng",
-          "price": 35000
+          "price": 35000,
+          "description": "Yogurt ăn kèm ngũ cốc nướng giòn và trái cây khô."
         },
         {
           "name": "Trái Cây Tô Yogurt",
-          "price": 30000
+          "price": 30000,
+          "description": "Yogurt mát lạnh ăn kèm trái cây tươi."
         }
       ]
     },
@@ -140,4 +149,3 @@
     }
   ]
 }
-

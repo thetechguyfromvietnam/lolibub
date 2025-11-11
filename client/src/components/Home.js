@@ -3,6 +3,7 @@ import { useCart } from '../context/CartContext';
 import { getMenu } from '../services/api';
 import './Home.css';
 import { resolveDrinkImage, heroBackgrounds } from '../utils/imageAssets';
+import ContactForm from './ContactForm';
 
 const ingredientTranslations = {
   'táo': 'Apple',
@@ -77,8 +78,7 @@ function Home() {
   const [error, setError] = useState(null);
   const { addToCart } = useCart();
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
-  const [activeCardId, setActiveCardId] = useState(null);
-
+  
   const totalHeroSlides = heroBackgrounds.length;
 
   useEffect(() => {
@@ -88,7 +88,7 @@ function Home() {
 
     const interval = setInterval(() => {
       setCurrentHeroIndex((prev) => (prev + 1) % totalHeroSlides);
-    }, 6000);
+    }, 1500);
 
     return () => clearInterval(interval);
   }, [totalHeroSlides]);
@@ -114,10 +114,6 @@ function Home() {
 
   const handleAddToCart = (item, category) => {
     addToCart(item, category);
-  };
-
-  const handleCardTouch = (cardId) => {
-    setActiveCardId((prev) => (prev === cardId ? null : cardId));
   };
 
   if (loading) {
@@ -151,9 +147,6 @@ function Home() {
             />
           ))}
         </div>
-        <div className="hero-logo" aria-hidden="true">
-          <img src="/images/logo.png" alt="" />
-        </div>
         <div className="container hero-content">
           <h2 className="hero-title">Lolibub Nước Uống Tốt Cho Sức Khoẻ</h2>
           <p className="hero-subtitle">Tươi mát, tự nhiên, tốt cho sức khỏe của bạn</p>
@@ -167,11 +160,6 @@ function Home() {
               <div className="category-header">
                 <h3 className="category-title">{category.name}</h3>
                 <p className="category-tagline">{getCategoryTagline(category.name)}</p>
-                {category.price && (
-                  <p className="category-subtitle">
-                    Giá {formatPrice(category.price)} đ
-                  </p>
-                )}
               </div>
               
               <div className="menu-cards-grid">
@@ -181,58 +169,58 @@ function Home() {
                   const ingredients = Array.isArray(item.ingredients) ? item.ingredients : [];
                   const ingredientTextVi = ingredients.join(' • ');
                   const ingredientTextEn = translateIngredients(ingredients).join(' • ');
-                  const description = ingredients.length
-                    ? getDescription(category.name, item.name)
-                    : getDescription(category.name, item.name);
-                  const cardId = `${catIndex}-${itemIndex}`;
-                  
+                  const description = item.description ||
+                    getDescription(category.name, item.name);
+                  const isYogurt = category.name.toLowerCase().includes('yogurt');
                   return (
                     <div
                       key={itemIndex}
-                      className={`menu-card ${activeCardId === cardId ? 'overlay-hidden' : ''}`}
-                      onTouchEnd={() => handleCardTouch(cardId)}
+                      className={`menu-card standard-card${isYogurt ? ' yogurt-card' : ''}`}
                     >
-                      <div className="menu-card-badge">{item.name}</div>
-
-                      <div className="menu-card-image-wrapper">
-                        <img 
-                          src={drinkImage} 
-                          alt={item.name}
-                          className="menu-card-image"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                            const fallbackIcon = e.target.nextSibling;
-                            if (fallbackIcon) {
-                              fallbackIcon.style.display = 'flex';
-                            }
-                          }}
-                        />
-                        <div className="menu-card-icon" style={{ display: 'none' }}>
-                          {drinkIcon}
-                        </div>
-                        <div className="menu-card-overlay">
-                          <div className="menu-card-content">
-                            <div className="menu-card-price">{formatPrice(item.price)} đ</div>
-                            
-                            {ingredients.length > 0 ? (
-                              <div className="menu-card-ingredients">
-                                <div className="ingredients-line vi">{ingredientTextVi}</div>
-                                <div className="ingredients-line en">{ingredientTextEn}</div>
-                              </div>
-                            ) : (
-                              <div className="menu-card-description">
-                                {description}
-                              </div>
-                            )}
-                            <button
-                              className="menu-card-btn"
-                              type="button"
-                              aria-label={`Thêm ${item.name} vào giỏ hàng`}
-                              onClick={() => handleAddToCart(item, category.name)}
-                            >
-                              Thêm Vào Giỏ
-                            </button>
+                      <div className="standard-card-inner">
+                        <div className="standard-card-image-wrapper">
+                          <img
+                            src={drinkImage}
+                            alt={item.name}
+                            className="standard-card-image"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              const fallbackIcon = e.target.nextSibling;
+                              if (fallbackIcon) {
+                                fallbackIcon.style.display = 'flex';
+                              }
+                            }}
+                          />
+                          <div className="standard-card-fallback-icon" style={{ display: 'none' }}>
+                            {drinkIcon}
                           </div>
+                          <div className="standard-card-price-chip">
+                            {formatPrice(item.price)} đ
+                          </div>
+                        </div>
+                        <div className="standard-card-info">
+                          <div className="standard-card-name">{item.name}</div>
+                          {ingredients.length > 0 ? (
+                            <div className="standard-card-ingredients">
+                              <div className="standard-ingredients-line vi">{ingredientTextVi}</div>
+                              <div className="standard-ingredients-line en">{ingredientTextEn}</div>
+                            </div>
+                          ) : (
+                            <div className="standard-card-description">
+                              {description}
+                            </div>
+                          )}
+                          <button
+                            className="menu-card-btn standard-card-btn"
+                            type="button"
+                            aria-label={`Thêm ${item.name} vào giỏ hàng`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddToCart(item, category.name);
+                            }}
+                          >
+                            Đặt Hàng • {formatPrice(item.price)} đ
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -241,6 +229,18 @@ function Home() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="contact-section">
+        <div className="container">
+          <div className="contact-section-header">
+            <h3 className="contact-title">Đặt Hàng Nhanh</h3>
+            <p className="contact-tagline">
+              Điền email và ghi chú để chúng tôi liên hệ xác nhận đơn hàng của bạn
+            </p>
+          </div>
+          <ContactForm />
         </div>
       </section>
 
