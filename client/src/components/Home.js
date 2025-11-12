@@ -91,12 +91,7 @@ const BRAND_PILLARS = [
   }
 ];
 
-const getFlavorProfile = (categoryName = '', ingredients = []) => {
-  const normalizedCategory = categoryName.toLowerCase();
-  const normalizedIngredients = ingredients.map((ingredient) => ingredient.toLowerCase());
-
-  return '';
-};
+const getFlavorProfile = () => '';
 
 const buildCardTags = () => [];
 
