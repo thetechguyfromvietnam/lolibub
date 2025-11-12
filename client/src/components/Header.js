@@ -33,14 +33,12 @@ function Header() {
   return (
     <header className="header">
       <div className="header-container">
-        <div className="logo">
-          <div className="logo-badge">
-            <img src="/images/logo.png" alt="Lolibub Logo" className="logo-image" />
-          </div>
-          <div>
-            <h1>Lolibub</h1>
-            <p>Healthy Drinks</p>
-          </div>
+        <div className="logo-badge">
+          <img src="/images/logo.png" alt="Lolibub Logo" className="logo-image" />
+        </div>
+        <div className="logo-text">
+          <h1 className="logo-title">Lolibub</h1>
+          <p className="logo-slogan">Fresh juice - Happy tea</p>
         </div>
         <nav className="nav">
           <Link
@@ -55,7 +53,7 @@ function Header() {
             {totalItems > 0 && (
               <span className="cart-badge">{totalItems}</span>
             )}
-            <span className="cart-text">Giỏ Hàng</span>
+            <span className="cart-text">Cart</span>
           </div>
         </nav>
       </div>

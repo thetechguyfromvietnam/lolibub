@@ -3,6 +3,7 @@ import { useCart } from '../context/CartContext';
 import { getMenu } from '../services/api';
 import './Home.css';
 import { resolveDrinkImage, heroBackgrounds } from '../utils/imageAssets';
+import { translateCategoryName } from '../utils/translations';
 import ContactForm from './ContactForm';
 
 const ingredientTranslations = {
@@ -44,50 +45,50 @@ const getDescription = () => '';
 const getCategoryTagline = (categoryName = '') => {
   const normalized = categoryName.toLowerCase();
   if (normalized.includes('trà trái cây')) {
-    return 'Trà trái cây thơm ngon, tự nhiên';
+    return 'Fragrant and naturally brewed fruit tea';
   }
   if (normalized.includes('cafe')) {
-    return 'Cà phê đậm đà, thơm lừng';
+    return 'Bold and aromatic coffee selections';
   }
   if (normalized.includes('trà sữa')) {
-    return 'Trà sữa ngọt ngào, chuẩn vị yêu thích';
+    return 'Silky milk tea brewed to perfection';
   }
-  return 'Nước uống tươi ngon, bổ dưỡng';
+  return 'Fresh, energising beverages for every mood';
 };
 
 const HERO_HIGHLIGHTS = [
   {
     icon: '🍃',
-    title: 'Trọn vị trái cây tươi',
-    description: 'Ép lạnh giữ nguyên dưỡng chất & không pha loãng'
+    title: 'Pure cold-pressed fruit',
+    description: 'Cold-pressed to lock in nutrients with zero dilution'
   },
   {
     icon: '🥭',
-    title: 'Nguyên liệu chọn lọc',
-    description: 'Trái cây theo mùa từ Đà Lạt, miền Tây & vườn hữu cơ'
+    title: 'Handpicked ingredients',
+    description: 'Seasonal produce from Da Lat, the Mekong Delta, and organic farms'
   },
   {
     icon: '⚡',
-    title: 'Giao trong 30 phút',
-    description: 'Đóng chai lạnh an toàn, giao tận tay vẫn tươi mát'
+    title: 'Delivered within 30 minutes',
+    description: 'Chilled bottles arrive fresh and vibrant right to your door'
   }
 ];
 
 const BRAND_PILLARS = [
   {
     icon: '🧊',
-    title: 'Giữ lạnh chuẩn Spa',
-    description: 'Công nghệ ép chậm & bảo quản 4-6°C giúp hương vị luôn trọn vẹn'
+    title: 'Spa-grade chilling',
+    description: 'Cold-pressed and stored at 4-6°C to preserve full flavour'
   },
   {
     icon: '🛵',
-    title: 'Giao nhanh nội thành',
-    description: 'Đội ngũ giao hàng chuyên nước lạnh, đảm bảo không tan đá'
+    title: 'Citywide fast delivery',
+    description: 'Dedicated chilled-delivery team keeps every bottle frosty'
   },
   {
     icon: '💚',
-    title: 'Không chất bảo quản',
-    description: 'Ngọt thanh từ trái cây & mật ong, nói không với syrup công nghiệp'
+    title: 'No preservatives',
+    description: 'Naturally sweet from fruit and honey—no artificial syrups'
   }
 ];
 
@@ -127,7 +128,7 @@ function Home() {
       setMenuData(data);
       setLoading(false);
     } catch (err) {
-      setError('Không thể tải menu. Vui lòng thử lại sau.');
+      setError('Unable to load the menu. Please try again later.');
       setLoading(false);
     }
   };
@@ -187,7 +188,7 @@ function Home() {
   if (loading) {
     return (
       <div className="loading-container">
-        <div className="loading">Đang tải menu...</div>
+        <div className="loading">Loading menu...</div>
       </div>
     );
   }
@@ -206,10 +207,10 @@ function Home() {
         <div className="container hero-inner">
           <div className="hero-copy">
             <span className="hero-eyebrow">Fresh & Balanced Lifestyle</span>
-            <h2 className="hero-title">Lolibub - Nước Uống Tốt Cho Sức Khỏe Mỗi Ngày</h2>
+            <h2 className="hero-title">Lolibub — Wellness Drinks for Every Day</h2>
             <p className="hero-subtitle">
-              Chai nước ép lạnh ép từ trái cây tươi nguyên, không pha loãng, giao tận tay trong 30 phút.
-              Tặng thêm năng lượng xanh cho ngày mới của bạn.
+              Cold-pressed juices made from whole fresh fruit, never diluted, delivered in under 30 minutes.
+              Give your day a clean boost of green energy.
             </p>
             <div className="hero-cta-group">
               <button
@@ -217,14 +218,14 @@ function Home() {
                 type="button"
                 onClick={scrollToMenu}
               >
-                Đặt hàng ngay
+                Order Now
               </button>
               <button
                 className="hero-cta-secondary"
                 type="button"
                 onClick={scrollToMenu}
               >
-                Khám phá menu
+                Browse the Menu
               </button>
             </div>
             <div className="hero-highlights">
@@ -257,7 +258,7 @@ function Home() {
                     key={image}
                     type="button"
                     className={`hero-slider-dot ${index === currentHeroIndex ? 'active' : ''}`}
-                    aria-label={`Xem ảnh số ${index + 1}`}
+                    aria-label={`View slide ${index + 1}`}
                     onClick={() => setCurrentHeroIndex(index)}
                   />
                 ))}
@@ -270,25 +271,25 @@ function Home() {
       <section className="brand-story">
         <div className="container brand-story-inner">
           <div className="brand-story-copy">
-            <span className="section-eyebrow">Câu chuyện Lolibub</span>
-            <h3>Chúng tôi ép lạnh để giữ trọn vị tươi</h3>
+            <span className="section-eyebrow">The Lolibub Story</span>
+            <h3>We cold-press to preserve fresh flavour</h3>
             <p>
-              Mỗi sáng, đội ngũ Lolibub chọn lọc trái cây theo mùa, xử lý dịu nhẹ để giữ trọn dưỡng chất,
-              sau đó làm lạnh nhanh và giao tận tay bạn. Mục tiêu của chúng tôi là trở thành thói quen chăm
-              sóc sức khỏe nhẹ nhàng nhưng cực kỳ ngon miệng.
+              Every morning the Lolibub team handpicks seasonal fruit, prepares it gently to retain nutrients,
+              then quick-chills each bottle before delivering it straight to you. We exist to make daily self-care
+              effortless, refreshing, and genuinely delicious.
             </p>
             <div className="brand-story-metrics">
               <div>
                 <strong>{menuStats.totalCategories}</strong>
-                <span>nhóm đồ uống đa dạng</span>
+                <span>distinct drink categories</span>
               </div>
               <div>
                 <strong>{menuStats.totalItems}</strong>
-                <span>công thức pha chế độc quyền</span>
+                <span>signature recipes crafted in-house</span>
               </div>
               <div>
                 <strong>4.9/5</strong>
-                <span>điểm hài lòng từ khách hàng</span>
+                <span>customer satisfaction score</span>
               </div>
             </div>
           </div>
@@ -309,10 +310,10 @@ function Home() {
           <div className="container">
             <div className="section-header">
               <span className="section-eyebrow">Signature Drinks</span>
-              <h3>Top món được đặt nhiều nhất tuần này</h3>
+              <h3>Most-loved sips this week</h3>
               <p>
-                Gợi ý những chai nước Lolibub gây thương nhớ. Hãy bắt đầu bằng một trong các món best seller,
-                bạn sẽ hiểu vì sao khách hàng quay lại mỗi tuần.
+                Meet the Lolibub bottles customers can’t stop reordering. Start with one of these crowd favourites
+                and you’ll see why guests come back every week.
               </p>
             </div>
             <div className="best-sellers-grid">
@@ -326,7 +327,7 @@ function Home() {
                     </div>
                     <div className="best-seller-info">
                       <div className="best-seller-name">{item.name}</div>
-                      <div className="best-seller-category">{item.categoryName}</div>
+                      <div className="best-seller-category">{translateCategoryName(item.categoryName)}</div>
                       {Boolean(item.description || getFlavorProfile(item.categoryName, item.ingredientList)) && (
                         <div className="best-seller-description">
                           {item.description || getFlavorProfile(item.categoryName, item.ingredientList)}
@@ -346,7 +347,7 @@ function Home() {
                           className="best-seller-btn"
                           onClick={() => handleAddToCart(item, item.categoryName)}
                         >
-                          Thêm ngay
+                          Add to Cart
                         </button>
                       </div>
                     </div>
@@ -362,26 +363,26 @@ function Home() {
         <div className="container" ref={menuSectionRef} id="menu">
           <div className="menu-intro">
             <div className="menu-intro-text">
-              <span className="section-eyebrow">Menu Lolibub</span>
-              <h3>Chọn vị bạn yêu thích & đặt giao ngay</h3>
+              <span className="section-eyebrow">Lolibub Menu</span>
+              <h3>Choose your favourite flavour & get it delivered</h3>
               <p>
-                Từ nước ép detox, trà trái cây, yogurt tới cà phê rang mới. Mỗi món đều được thử nghiệm
-                nhiều lần để cân bằng dưỡng chất và hương vị sảng khoái.
+                From detox cold-pressed juices and fruit teas to yogurt bowls and freshly roasted coffee.
+                Every recipe is tested repeatedly to balance nutrients with a bright, feel-good taste.
               </p>
             </div>
             <div className="menu-metrics">
               <div>
                 <strong>{menuStats.totalItems}</strong>
-                <span>công thức đang phục vụ</span>
+                <span>recipes currently on the menu</span>
               </div>
               <div>
                 <strong>{menuStats.totalCategories}</strong>
-                <span>phân khúc nước uống</span>
+                <span>beverage categories</span>
               </div>
               {menuStats.heroSignature && (
                 <div>
                   <strong>{menuStats.heroSignature}</strong>
-                  <span>được đặt nhiều nhất hôm nay</span>
+                  <span>today’s most-ordered drink</span>
                 </div>
               )}
             </div>
@@ -390,7 +391,7 @@ function Home() {
           {categoriesWithItems.map((category, catIndex) => (
             <div key={catIndex} className="category-section">
               <div className="category-header">
-                <h3 className="category-title">{category.name}</h3>
+                <h3 className="category-title">{translateCategoryName(category.name)}</h3>
                 <p className="category-tagline">{getCategoryTagline(category.name)}</p>
               </div>
               
@@ -399,8 +400,8 @@ function Home() {
                   const drinkImage = resolveDrinkImage(category.name, item.name, itemIndex);
                   const drinkIcon = getDrinkIcon(category.name, item.name);
                   const ingredients = Array.isArray(item.ingredients) ? item.ingredients : [];
-                  const ingredientTextVi = ingredients.join(' • ');
-                  const ingredientTextEn = translateIngredients(ingredients).join(' • ');
+                  const ingredientTextOriginal = ingredients.join(' • ');
+                  const ingredientTextEnglish = translateIngredients(ingredients).join(' • ');
                   const description = item.description ||
                     getDescription(category.name, item.name);
                   const isYogurt = category.name.toLowerCase().includes('yogurt');
@@ -436,8 +437,10 @@ function Home() {
                           <div className="standard-card-name">{item.name}</div>
                           {ingredients.length > 0 && (
                             <div className="standard-card-ingredients">
-                              <div className="standard-ingredients-line vi">{ingredientTextVi}</div>
-                              <div className="standard-ingredients-line en">{ingredientTextEn}</div>
+                              <div className="standard-ingredients-line">{ingredientTextEnglish}</div>
+                              {ingredientTextOriginal && ingredientTextOriginal !== ingredientTextEnglish && (
+                                <div className="standard-ingredients-line en">{ingredientTextOriginal}</div>
+                              )}
                             </div>
                           )}
                           {Boolean(description) && (
@@ -460,13 +463,13 @@ function Home() {
                           <button
                             className="menu-card-btn standard-card-btn"
                             type="button"
-                            aria-label={`Thêm ${item.name} vào giỏ hàng`}
+                            aria-label={`Add ${item.name} to cart`}
                             onClick={(e) => {
                               e.stopPropagation();
                               handleAddToCart(item, category.name);
                             }}
                           >
-                            Đặt Hàng • {formatPrice(item.price)} đ
+                            Order Now • {formatPrice(item.price)} đ
                           </button>
                         </div>
                       </div>
@@ -482,9 +485,9 @@ function Home() {
       <section className="contact-section">
         <div className="container">
           <div className="contact-section-header">
-            <h3 className="contact-title">Đặt Hàng Nhanh</h3>
+            <h3 className="contact-title">Quick Order</h3>
             <p className="contact-tagline">
-              Điền email và ghi chú để chúng tôi liên hệ xác nhận đơn hàng của bạn
+              Leave your email and note so we can confirm your order right away
             </p>
           </div>
           <ContactForm />
@@ -493,7 +496,7 @@ function Home() {
 
       <footer className="footer">
         <div className="container">
-          <p>&copy; 2024 Loli Bub. Tất cả quyền được bảo lưu.</p>
+          <p>&copy; 2024 Loli Bub. All rights reserved.</p>
         </div>
       </footer>
     </div>
