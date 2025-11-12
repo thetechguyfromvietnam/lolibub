@@ -3,7 +3,7 @@ import { useCart } from '../context/CartContext';
 import { getMenu } from '../services/api';
 import './Home.css';
 import { resolveDrinkImage, heroBackgrounds } from '../utils/imageAssets';
-import { translateCategoryName } from '../utils/translations';
+import { translateCategoryName, translateDrinkName } from '../utils/translations';
 import ContactForm from './ContactForm';
 
 const ingredientTranslations = {
@@ -319,6 +319,8 @@ function Home() {
             <div className="best-sellers-grid">
               {bestSellers.map((item, index) => {
                 const tags = buildCardTags(item.categoryName, item.ingredientList);
+                const translatedName = translateDrinkName(item.name);
+                const showOriginalName = translatedName !== item.name;
                 return (
                   <div key={`${item.name}-${index}`} className="best-seller-card">
                     <div className="best-seller-rank">#{index + 1}</div>
@@ -326,7 +328,12 @@ function Home() {
                       <img src={item.image} alt={item.name} />
                     </div>
                     <div className="best-seller-info">
-                      <div className="best-seller-name">{item.name}</div>
+                      <div className="best-seller-name">
+                        {translatedName}
+                        {showOriginalName && (
+                          <span className="best-seller-name-original">{item.name}</span>
+                        )}
+                      </div>
                       <div className="best-seller-category">{translateCategoryName(item.categoryName)}</div>
                       {Boolean(item.description || getFlavorProfile(item.categoryName, item.ingredientList)) && (
                         <div className="best-seller-description">
@@ -407,6 +414,8 @@ function Home() {
                   const isYogurt = category.name.toLowerCase().includes('yogurt');
                   const flavorProfile = getFlavorProfile(category.name, ingredients);
                   const tags = buildCardTags(category.name, ingredients);
+                  const translatedName = translateDrinkName(item.name);
+                  const showOriginalName = translatedName !== item.name;
                   return (
                     <div
                       key={itemIndex}
@@ -434,7 +443,12 @@ function Home() {
                           </div>
                         </div>
                         <div className="standard-card-info">
-                          <div className="standard-card-name">{item.name}</div>
+                          <div className="standard-card-name">
+                            {translatedName}
+                            {showOriginalName && (
+                              <span className="standard-card-name-original">{item.name}</span>
+                            )}
+                          </div>
                           {ingredients.length > 0 && (
                             <div className="standard-card-ingredients">
                               <div className="standard-ingredients-line">{ingredientTextEnglish}</div>

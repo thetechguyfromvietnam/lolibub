@@ -323,9 +323,21 @@
 }
 
 .best-seller-name {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
   font-size: 20px;
   font-weight: 700;
   color: var(--text-color);
+}
+
+.best-seller-name-original {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(22, 99, 42, 0.65);
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 .best-seller-category {
@@ -624,9 +636,22 @@
 }
 
 .standard-card-name {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
   font-size: 24px;
   font-weight: 800;
   color: var(--healthy-green-dark, #16632a);
+  text-align: center;
+}
+
+.standard-card-name-original {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(22, 99, 42, 0.7);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
 }
 
 .standard-card-ingredients,

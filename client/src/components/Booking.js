@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getMenu, submitOrder } from '../services/api';
-import { translateCategoryName } from '../utils/translations';
+import { translateCategoryName, translateDrinkName } from '../utils/translations';
 import './Booking.css';
 
 function Booking() {
@@ -352,6 +352,8 @@ function Booking() {
                     const itemId = `${category.name}_${item.name}`.replace(/\s+/g, '_');
                     const isSelected = !!selectedItems[itemId];
                     const displayCategoryName = translateCategoryName(category.name);
+                    const translatedName = translateDrinkName(item.name);
+                    const showOriginalName = translatedName !== item.name;
 
                     return (
                       <div
@@ -360,7 +362,12 @@ function Booking() {
                         onClick={() => toggleItemSelection(itemId, item, category.name)}
                       >
                         <div className="menu-option-header">
-                          <span className="menu-option-name">{item.name}</span>
+                          <span className="menu-option-name">
+                            {translatedName}
+                            {showOriginalName && (
+                              <span className="menu-option-name-original">{item.name}</span>
+                            )}
+                          </span>
                           <span className="menu-option-price">{formatPrice(item.price)} đ</span>
                         </div>
                         <div className="menu-option-category">{displayCategoryName}</div>
