@@ -45,6 +45,13 @@
   min-height: 160px;
 }
 
+.contact-form .form-error {
+  margin-top: -8px;
+  color: #d64545;
+  font-size: 14px;
+  font-weight: 500;
+}
+
 .contact-form .btn {
   align-self: flex-end;
   min-width: 180px;
@@ -69,6 +76,10 @@
 .contact-form-success p {
   color: rgba(16, 59, 36, 0.75);
   line-height: 1.5;
+}
+
+.contact-form-success .btn {
+  margin-top: 24px;
 }
 
 @media (max-width: 768px) {

@@ -1,13 +1,34 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import Cart from './Cart';
 import './Header.css';
 
 function Header() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { getTotalItems, showCart, setShowCart } = useCart();
   const totalItems = getTotalItems();
+
+  const scrollToMenu = () => {
+    const menuSection = document.getElementById('menu');
+    if (menuSection) {
+      menuSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handleMenuClick = (event) => {
+    event.preventDefault();
+
+    if (location.pathname === '/') {
+      scrollToMenu();
+      return;
+    }
+
+    navigate('/');
+
+    setTimeout(scrollToMenu, 120);
+  };
 
   return (
     <header className="header">
@@ -22,9 +43,10 @@ function Header() {
           </div>
         </div>
         <nav className="nav">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
+            onClick={handleMenuClick}
           >
             Menu
           </Link>
