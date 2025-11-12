@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import './ContactForm.css';
 
+const FORMCARRY_ENDPOINT = 'https://formcarry.com/s/jqXIdgSA5Ag';
+
 function ContactForm() {
   const [formData, setFormData] = useState({
+    name: '',
     email: '',
     message: ''
   });
@@ -20,31 +23,41 @@ function ContactForm() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setSubmitting(true);
     setError(null);
 
+    if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
+      setError('Vui lòng điền đầy đủ thông tin trước khi gửi.');
+      return;
+    }
+
+    setSubmitting(true);
+
     try {
-      const response = await fetch('/api/send-order', {
+      const response = await fetch(FORMCARRY_ENDPOINT, {
         method: 'POST',
         headers: {
+          Accept: 'application/json',
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(formData)
       });
 
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        throw new Error(payload.message || 'SEND_FAILED');
+      const payload = await response.json().catch(() => ({}));
+
+      if (response.ok && payload.code === 200) {
+        setSubmitted(true);
+        setFormData({
+          name: '',
+          email: '',
+          message: ''
+        });
+        return;
       }
 
-      setSubmitted(true);
-      setFormData({
-        email: '',
-        message: ''
-      });
+      setError(payload?.message || 'Không thể gửi đơn hàng. Vui lòng thử lại sau.');
     } catch (err) {
-      console.error('Send order error:', err);
-      setError('Không thể gửi đơn hàng về email nhận thông báo. Vui lòng thử lại sau.');
+      console.error('Formcarry error:', err);
+      setError(err?.message || 'Không thể gửi đơn hàng. Vui lòng thử lại sau.');
     } finally {
       setSubmitting(false);
     }
@@ -58,7 +71,10 @@ function ContactForm() {
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => setSubmitted(false)}
+          onClick={() => {
+            setSubmitted(false);
+            setError(null);
+          }}
         >
           Gửi thêm yêu cầu
         </button>
@@ -68,6 +84,19 @@ function ContactForm() {
 
   return (
     <form className="contact-form" onSubmit={handleSubmit} noValidate>
+      <div className="form-row">
+        <label htmlFor="name">Tên của bạn</label>
+        <input
+          id="name"
+          type="text"
+          name="name"
+          placeholder="Nhập họ và tên"
+          value={formData.name}
+          onChange={handleChange}
+          required
+        />
+      </div>
+
       <div className="form-row">
         <label htmlFor="email">Email</label>
         <input
@@ -95,7 +124,7 @@ function ContactForm() {
       </div>
 
       {error && (
-        <div className="form-error">
+        <div className="form-error" role="alert">
           {error}
         </div>
       )}
