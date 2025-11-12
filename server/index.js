@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const { google } = require('googleapis');
-const axios = require('axios');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 const app = express();
@@ -253,17 +253,49 @@ async function appendOrderToGoogleSheet(orderData) {
   }
 }
 
-async function sendOrderNotification(orderData, orderMessage) {
-  const formspreeEndpoint = getFormspreeEndpoint();
+function getGmailTransporter() {
+  if (getGmailTransporter.transporter) {
+    return getGmailTransporter.transporter;
+  }
 
-  if (!formspreeEndpoint) {
+  const user = process.env.GMAIL_USER;
+  const pass = process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_PASS;
+
+  if (!user || !pass) {
+    console.warn('Missing Gmail credentials. Skipping email notification.');
+    return null;
+  }
+
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user,
+      pass
+    }
+  });
+
+  getGmailTransporter.transporter = transporter;
+  return transporter;
+}
+
+async function sendOrderNotification(orderData, orderMessage) {
+  const transporter = getGmailTransporter();
+
+  if (!transporter) {
     return;
   }
 
-  const recipients = (process.env.EMAIL_TO || 'thestoriesguys@gmail.com')
+  const senderName = process.env.EMAIL_FROM_NAME || 'Loli Bub';
+  const senderEmail = process.env.GMAIL_USER;
+  const recipients = (process.env.EMAIL_TO || process.env.GMAIL_USER || '')
     .split(',')
     .map((recipient) => recipient.trim())
     .filter(Boolean);
+
+  if (recipients.length === 0) {
+    console.warn('No email recipients configured. Skipping email notification.');
+    return;
+  }
 
   const itemsText = (orderData.items || [])
     .map((item) => {
@@ -297,19 +329,51 @@ async function sendOrderNotification(orderData, orderMessage) {
     .filter(Boolean)
     .join('\n');
 
-  await axios.post(
-    formspreeEndpoint,
-    {
-      email: recipients[0] || 'thestoriesguys@gmail.com',
-      message,
-      ...(orderMessage ? { summary: orderMessage.replace(/\*/g, '') } : {})
-    },
-    {
-      headers: {
-        Accept: 'application/json'
-      }
-    }
-  );
+  const htmlMessage = [
+    '<h2>Đơn hàng mới từ website Lolibub</h2>',
+    `<p><strong>Khách hàng:</strong> ${orderData.customerName || ''}</p>`,
+    `<p><strong>SĐT:</strong> ${orderData.phone || ''}</p>`,
+    `<p><strong>Địa chỉ:</strong> ${orderData.address || ''}</p>`,
+    orderData.note ? `<p><strong>Ghi chú:</strong> ${orderData.note}</p>` : null,
+    `<p><strong>Thanh toán:</strong> ${
+      orderData.paymentMethod === 'cash' ? 'Tiền mặt' : 'Chuyển khoản'
+    }</p>`,
+    '<h3>Chi tiết đơn hàng</h3>',
+    '<ul>',
+    ...(orderData.items || []).map((item) => {
+      const name = item.name || 'Không rõ';
+      const category = item.category || 'Không rõ';
+      const quantity = item.quantity || 1;
+      const price = item.price || 0;
+      return `<li>${name} (${category}) x${quantity} = ${formatPrice(price * quantity)} đ</li>`;
+    }),
+    '</ul>',
+    `<p><strong>Tổng tiền:</strong> ${formatPrice(orderData.total || 0)} đ</p>`,
+    orderData.paymentMethod === 'bank_transfer' && orderData.paymentProof
+      ? `<p>Đã nhận chứng từ: ${orderData.paymentProof}</p>`
+      : null,
+    '<p>Email tự động từ hệ thống Lolibub.</p>'
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  const attachments = [];
+
+  if (orderData.paymentProofPath && fs.existsSync(orderData.paymentProofPath)) {
+    attachments.push({
+      filename: path.basename(orderData.paymentProofPath),
+      path: orderData.paymentProofPath
+    });
+  }
+
+  await transporter.sendMail({
+    from: `"${senderName}" <${senderEmail}>`,
+    to: recipients,
+    subject: `Đơn hàng mới từ ${orderData.customerName || 'Khách hàng'}`,
+    text: orderMessage ? orderMessage.replace(/\*/g, '') : message,
+    html: htmlMessage,
+    attachments
+  });
 }
 
 // Save order to file (optional)
@@ -321,10 +385,6 @@ function saveOrderToFile(orderData) {
 
   const orderFile = path.join(ordersDir, `order_${Date.now()}.json`);
   fs.writeFileSync(orderFile, JSON.stringify(orderData, null, 2), 'utf8');
-}
-
-function getFormspreeEndpoint() {
-  return process.env.FORMSPREE_ENDPOINT || 'https://formspree.io/f/xqawzddv';
 }
 
 // Catch all handler: send back React's index.html file
