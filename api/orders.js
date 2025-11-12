@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { formidable } = require('formidable');
 const { google } = require('googleapis');
-const axios = require('axios');
+const nodemailer = require('nodemailer');
 
 module.exports = async (req, res) => {
   // Enable CORS
@@ -245,17 +245,62 @@ async function appendOrderToGoogleSheet(orderData) {
   }
 }
 
-async function sendOrderNotification(orderData, orderMessage) {
-  const formspreeEndpoint = getFormspreeEndpoint();
-
-  if (!formspreeEndpoint) {
-    return;
+function getMailTransporter() {
+  if (getMailTransporter.transporter) {
+    return getMailTransporter.transporter;
   }
 
-  const recipients = (process.env.EMAIL_TO || 'thestoriesguys@gmail.com')
+  const user = process.env.GMAIL_USER || process.env.SMTP_USER;
+  const pass = process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_PASS || process.env.SMTP_PASS;
+
+  if (!user || !pass) {
+    console.warn('Missing email credentials. Skipping email notification.');
+    return null;
+  }
+
+  const transporter = nodemailer.createTransport(
+    process.env.GMAIL_USER
+      ? {
+          service: 'gmail',
+          auth: {
+            user: process.env.GMAIL_USER,
+            pass: process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_PASS
+          }
+        }
+      : {
+          host: process.env.SMTP_HOST || 'smtp.gmail.com',
+          port: Number(process.env.SMTP_PORT || 465),
+          secure: typeof process.env.SMTP_SECURE === 'string'
+            ? process.env.SMTP_SECURE.toLowerCase() === 'true'
+            : Number(process.env.SMTP_PORT || 465) === 465,
+          auth: {
+            user,
+            pass
+          }
+        }
+  );
+
+  getMailTransporter.transporter = transporter;
+  return transporter;
+}
+
+async function sendOrderNotification(orderData, orderMessage) {
+  const transporter = getMailTransporter();
+
+  if (!transporter) {
+    throw new Error('Email transporter not configured');
+  }
+
+  const senderName = process.env.EMAIL_FROM_NAME || 'Loli Bub';
+  const senderEmail = process.env.GMAIL_USER || process.env.SMTP_FROM || process.env.SMTP_USER;
+  const recipients = (process.env.EMAIL_TO || process.env.ORDER_RECEIVER || senderEmail || '')
     .split(',')
     .map((recipient) => recipient.trim())
     .filter(Boolean);
+
+  if (recipients.length === 0) {
+    throw new Error('No email recipients configured');
+  }
 
   const itemsText = (orderData.items || [])
     .map((item) => {
@@ -267,7 +312,7 @@ async function sendOrderNotification(orderData, orderMessage) {
     })
     .join('\n');
 
-  const message = [
+  const textMessage = [
     `Đơn hàng mới từ ${orderData.customerName || 'Khách hàng'}`,
     `SĐT: ${orderData.phone || ''}`,
     `Địa chỉ: ${orderData.address || ''}`,
@@ -281,7 +326,7 @@ async function sendOrderNotification(orderData, orderMessage) {
     '',
     `Tổng tiền: ${formatPrice(orderData.total || 0)} đ`,
     orderData.paymentProofPath
-      ? `Chứng từ lưu tại: ${orderData.paymentProofPath}`
+      ? `Chứng từ tạm lưu tại: ${orderData.paymentProofPath}`
       : null,
     '',
     'Email tự động từ hệ thống Lolibub.'
@@ -289,22 +334,50 @@ async function sendOrderNotification(orderData, orderMessage) {
     .filter(Boolean)
     .join('\n');
 
-  await axios.post(
-    formspreeEndpoint,
-    {
-      email: recipients[0] || 'thestoriesguys@gmail.com',
-      message,
-      ...(orderMessage ? { summary: orderMessage.replace(/\*/g, '') } : {})
-    },
-    {
-      headers: {
-        Accept: 'application/json'
-      }
-    }
-  );
-}
+  const htmlMessage = [
+    '<h2>Đơn hàng mới từ website Lolibub</h2>',
+    `<p><strong>Khách hàng:</strong> ${orderData.customerName || ''}</p>`,
+    `<p><strong>SĐT:</strong> ${orderData.phone || ''}</p>`,
+    `<p><strong>Địa chỉ:</strong> ${orderData.address || ''}</p>`,
+    orderData.note ? `<p><strong>Ghi chú:</strong> ${orderData.note}</p>` : null,
+    `<p><strong>Thanh toán:</strong> ${
+      orderData.paymentMethod === 'cash' ? 'Tiền mặt' : 'Chuyển khoản'
+    }</p>`,
+    '<h3>Chi tiết đơn hàng</h3>',
+    '<ul>',
+    ...(orderData.items || []).map((item) => {
+      const name = item.name || 'Không rõ';
+      const category = item.category || 'Không rõ';
+      const quantity = item.quantity || 1;
+      const price = item.price || 0;
+      return `<li>${name} (${category}) x${quantity} = ${formatPrice(price * quantity)} đ</li>`;
+    }),
+    '</ul>',
+    `<p><strong>Tổng tiền:</strong> ${formatPrice(orderData.total || 0)} đ</p>`,
+    orderData.paymentMethod === 'bank_transfer' && orderData.paymentProof
+      ? `<p>Đã nhận chứng từ: ${orderData.paymentProof}</p>`
+      : null,
+    '<p>Email tự động từ hệ thống Lolibub.</p>'
+  ]
+    .filter(Boolean)
+    .join('\n');
 
-function getFormspreeEndpoint() {
-  return process.env.FORMSPREE_ENDPOINT || 'https://formspree.io/f/xqawzddv';
+  const attachments = [];
+
+  if (orderData.paymentProofPath && fs.existsSync(orderData.paymentProofPath)) {
+    attachments.push({
+      filename: path.basename(orderData.paymentProofPath),
+      path: orderData.paymentProofPath
+    });
+  }
+
+  await transporter.sendMail({
+    from: `"${senderName}" <${senderEmail}>`,
+    to: recipients,
+    subject: `Đơn hàng mới từ ${orderData.customerName || 'Khách hàng'}`,
+    text: orderMessage ? orderMessage.replace(/\*/g, '') : textMessage,
+    html: htmlMessage,
+    attachments
+  });
 }
 
