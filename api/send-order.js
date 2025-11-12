@@ -18,30 +18,42 @@ const parseBody = (body) => {
 
 const createTransporter = () => {
   const {
-    SMTP_HOST,
-    SMTP_PORT,
-    SMTP_USER,
-    SMTP_PASS,
-    SMTP_SECURE,
-    SMTP_SERVICE
+    GMAIL_USER,
+    GMAIL_APP_PASSWORD,
+    GMAIL_PASS,
+    EMAIL_FROM_NAME,
+    EMAIL_TO,
   } = process.env;
 
-  if (!SMTP_USER || !SMTP_PASS) {
-    throw new Error('Missing SMTP credentials. Please configure SMTP_USER and SMTP_PASS.');
+  const user = GMAIL_USER || SMTP_USER;
+  const pass = GMAIL_APP_PASSWORD || GMAIL_PASS || SMTP_PASS;
+
+  if (!user || !pass) {
+    throw new Error('Missing SMTP credentials. Please configure GMAIL_USER/GMAIL_APP_PASSWORD or SMTP_USER/SMTP_PASS.');
+  }
+
+  if (GMAIL_USER) {
+    return nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: GMAIL_USER,
+        pass: GMAIL_APP_PASSWORD || GMAIL_PASS
+      }
+    });
   }
 
   if (SMTP_SERVICE) {
     return nodemailer.createTransport({
       service: SMTP_SERVICE,
       auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASS
+        user,
+        pass
       }
     });
   }
 
   if (!SMTP_HOST) {
-    throw new Error('Missing SMTP_HOST. Please configure SMTP_HOST or SMTP_SERVICE.');
+    throw new Error('Missing SMTP_HOST. Please configure SMTP_HOST, SMTP_SERVICE, or provide GMAIL_* variables.');
   }
 
   return nodemailer.createTransport({
@@ -51,8 +63,8 @@ const createTransporter = () => {
       ? SMTP_SECURE.toLowerCase() === 'true'
       : Number(SMTP_PORT || 465) === 465,
     auth: {
-      user: SMTP_USER,
-      pass: SMTP_PASS
+      user,
+      pass
     }
   });
 };
@@ -76,9 +88,20 @@ export default async function handler(request, response) {
   try {
     const transporter = createTransporter();
 
+    const fromAddress = process.env.GMAIL_USER || process.env.SMTP_FROM || process.env.SMTP_USER;
+    const fromName = process.env.EMAIL_FROM_NAME || 'Lolibub';
+    const recipients = (process.env.EMAIL_TO || process.env.ORDER_RECEIVER || fromAddress || '')
+      .split(',')
+      .map((recipient) => recipient.trim())
+      .filter(Boolean);
+
+    if (recipients.length === 0) {
+      throw new Error('No email recipients configured. Please set EMAIL_TO or ORDER_RECEIVER.');
+    }
+
     const mailOptions = {
-      from: `"Lolibub" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
-      to: process.env.ORDER_RECEIVER || process.env.SMTP_USER,
+      from: `"${fromName}" <${fromAddress}>`,
+      to: recipients,
       replyTo: email,
       subject: 'Yêu cầu mới từ Lolibub',
       text: [
