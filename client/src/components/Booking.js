@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getMenu, submitOrder } from '../services/api';
+import { translateCategoryName } from '../utils/translations';
 import './Booking.css';
 
 function Booking() {
@@ -28,7 +29,7 @@ function Booking() {
       setMenuData(data);
       setLoading(false);
     } catch (err) {
-      setNotification({ type: 'error', message: 'Không thể tải menu' });
+      setNotification({ type: 'error', message: 'Unable to load the menu.' });
       setLoading(false);
     }
   };
@@ -89,7 +90,7 @@ function Booking() {
 
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setNotification({ type: 'error', message: 'Kích thước file không được vượt quá 5MB' });
+        setNotification({ type: 'error', message: 'File size must not exceed 5MB.' });
         return;
       }
 
@@ -110,12 +111,12 @@ function Booking() {
     e.preventDefault();
 
     if (Object.keys(selectedItems).length === 0) {
-      setNotification({ type: 'error', message: 'Vui lòng chọn ít nhất một món!' });
+      setNotification({ type: 'error', message: 'Please select at least one item!' });
       return;
     }
 
     if (formData.paymentMethod === 'bank_transfer' && !formData.paymentProof) {
-      setNotification({ type: 'error', message: 'Vui lòng upload ảnh chứng từ chuyển khoản!' });
+      setNotification({ type: 'error', message: 'Please upload your transfer receipt image!' });
       return;
     }
 
@@ -138,12 +139,12 @@ function Booking() {
       const result = await submitOrder(orderFormData);
 
       if (!result?.success) {
-        throw new Error(result?.error || 'Đơn hàng chưa được gửi về email nhận thông báo');
+        throw new Error(result?.error || 'The order could not be delivered to the notification inbox.');
       }
 
       setNotification({ 
         type: 'success', 
-        message: 'Đơn hàng đã được gửi thành công! Thông tin đã được gửi đến Formsheet.' 
+        message: 'Order sent successfully! Details have been delivered to Formsheet.' 
       });
 
       // Reset form
@@ -164,7 +165,7 @@ function Booking() {
     } catch (error) {
       setNotification({ 
         type: 'error', 
-        message: error.response?.data?.error || error.message || 'Có lỗi xảy ra khi gửi đơn hàng' 
+        message: error.response?.data?.error || error.message || 'Something went wrong while submitting the order.' 
       });
     } finally {
       setSubmitting(false);
@@ -184,7 +185,7 @@ function Booking() {
   if (loading) {
     return (
       <div className="loading-container">
-        <div className="loading">Đang tải menu...</div>
+        <div className="loading">Loading menu...</div>
       </div>
     );
   }
@@ -194,14 +195,14 @@ function Booking() {
       {showNotification()}
       <section className="booking-section">
         <div className="container">
-          <h2 className="section-title">Đặt Hàng</h2>
+          <h2 className="section-title">Place an Order</h2>
           <p className="section-subtitle">
-            Vui lòng điền thông tin và chọn món bạn muốn đặt
+            Please fill in your details and pick the drinks you would like to order.
           </p>
 
           <form onSubmit={handleSubmit} className="booking-form" method="POST">
             <div className="form-group">
-              <label htmlFor="customer-name">Họ và Tên *</label>
+              <label htmlFor="customer-name">Full Name *</label>
               <input
                 type="text"
                 id="customer-name"
@@ -209,12 +210,12 @@ function Booking() {
                 required
                 value={formData.customerName}
                 onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                placeholder="Nhập họ và tên"
+                placeholder="Enter your full name"
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="phone">Số Điện Thoại *</label>
+              <label htmlFor="phone">Phone Number *</label>
               <input
                 type="tel"
                 id="phone"
@@ -222,12 +223,12 @@ function Booking() {
                 required
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="Nhập số điện thoại"
+                placeholder="Enter your phone number"
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="address">Địa Chỉ Giao Hàng *</label>
+              <label htmlFor="address">Delivery Address *</label>
               <textarea
                 id="address"
                 name="address"
@@ -235,24 +236,24 @@ function Booking() {
                 required
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                placeholder="Nhập địa chỉ giao hàng"
+                placeholder="Enter delivery address"
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="note">Ghi Chú</label>
+              <label htmlFor="note">Notes</label>
               <textarea
                 id="note"
                 name="note"
                 rows="3"
                 value={formData.note}
                 onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-                placeholder="Ghi chú thêm (nếu có)"
+                placeholder="Additional notes (optional)"
               />
             </div>
 
             <div className="form-group payment-method-group">
-              <label>Phương Thức Thanh Toán *</label>
+              <label>Payment Method *</label>
               <div className="payment-method-options">
                 <label
                   className={`payment-method-option ${formData.paymentMethod === 'bank_transfer' ? 'active' : ''}`}
@@ -264,8 +265,8 @@ function Booking() {
                     checked={formData.paymentMethod === 'bank_transfer'}
                     onChange={() => handlePaymentMethodChange('bank_transfer')}
                   />
-                  <span className="payment-method-title">Chuyển khoản</span>
-                  <span className="payment-method-desc">Quét mã QR và gửi chứng từ chuyển khoản</span>
+                  <span className="payment-method-title">Bank transfer</span>
+                  <span className="payment-method-desc">Scan the QR code and upload the transfer receipt</span>
                 </label>
 
                 <label
@@ -278,29 +279,29 @@ function Booking() {
                     checked={formData.paymentMethod === 'cash'}
                     onChange={() => handlePaymentMethodChange('cash')}
                   />
-                  <span className="payment-method-title">Tiền mặt</span>
-                  <span className="payment-method-desc">Thanh toán trực tiếp khi nhận hàng</span>
+                  <span className="payment-method-title">Cash</span>
+                  <span className="payment-method-desc">Pay directly when you receive the order</span>
                 </label>
               </div>
 
               {formData.paymentMethod === 'bank_transfer' ? (
                 <div className="payment-transfer-details">
                   <div className="qr-code-section">
-                    <p className="qr-instruction">Vui lòng quét mã QR để chuyển khoản:</p>
+                    <p className="qr-instruction">Please scan the QR code to transfer:</p>
                     <div className="qr-code-wrapper">
                       <img
                         src="/images/qr-code.jpg"
-                        alt="QR Code Chuyển Khoản"
+                        alt="Bank Transfer QR Code"
                         className="qr-code-image"
                       />
                     </div>
-                    <p className="qr-amount">Số tiền: <strong>{formatPrice(calculateTotal())} đ</strong></p>
+                    <p className="qr-amount">Amount: <strong>{formatPrice(calculateTotal())} đ</strong></p>
                   </div>
 
                   <div className="payment-proof-upload">
                     <label htmlFor="booking-payment-proof">
-                      Upload Ảnh Chứng Từ Chuyển Khoản
-                      <span className="required-note">(Bắt buộc khi chuyển khoản)</span>
+                      Upload Bank Transfer Receipt
+                      <span className="required-note">(Required for bank transfers)</span>
                     </label>
                     <div className="file-upload-wrapper">
                       <input
@@ -312,12 +313,12 @@ function Booking() {
                         required={formData.paymentMethod === 'bank_transfer'}
                       />
                       <label htmlFor="booking-payment-proof" className="file-label">
-                        {paymentProofPreview ? '✓ Đã chọn ảnh' : 'Chọn ảnh chứng từ'}
+                        {paymentProofPreview ? '✓ Image selected' : 'Choose receipt image'}
                       </label>
                     </div>
                     {paymentProofPreview && (
                       <div className="payment-proof-preview">
-                        <img src={paymentProofPreview} alt="Chứng từ chuyển khoản" />
+                        <img src={paymentProofPreview} alt="Transfer receipt preview" />
                         <button
                           type="button"
                           className="remove-image-btn"
@@ -330,26 +331,27 @@ function Booking() {
                         </button>
                       </div>
                     )}
-                    <p className="file-note">Chấp nhận: JPG, PNG, GIF (tối đa 5MB)</p>
+                    <p className="file-note">Accepted formats: JPG, PNG, GIF (max 5MB)</p>
                   </div>
                 </div>
               ) : (
                 <div className="cash-payment-note">
                   <p>
-                    Bạn sẽ thanh toán bằng tiền mặt khi nhận hàng. Vui lòng chuẩn bị số tiền{' '}
-                    <strong>{formatPrice(calculateTotal())} đ</strong> để tiện cho việc giao nhận.
+                    You will pay in cash upon delivery. Please prepare{' '}
+                    <strong>{formatPrice(calculateTotal())} đ</strong> for a smooth handoff.
                   </p>
                 </div>
               )}
             </div>
 
             <div className="form-group">
-              <label>Chọn Món *</label>
+              <label>Select Items *</label>
               <div className="menu-selection">
                 {menuData.categories.map((category) =>
                   category.items.map((item, itemIndex) => {
                     const itemId = `${category.name}_${item.name}`.replace(/\s+/g, '_');
                     const isSelected = !!selectedItems[itemId];
+                    const displayCategoryName = translateCategoryName(category.name);
 
                     return (
                       <div
@@ -361,7 +363,7 @@ function Booking() {
                           <span className="menu-option-name">{item.name}</span>
                           <span className="menu-option-price">{formatPrice(item.price)} đ</span>
                         </div>
-                        <div className="menu-option-category">{category.name}</div>
+                        <div className="menu-option-category">{displayCategoryName}</div>
                         {isSelected && (
                           <div className="menu-option-quantity">
                             <button
@@ -405,10 +407,10 @@ function Booking() {
             </div>
 
             <div className="order-summary">
-              <h3>Tổng Đơn Hàng</h3>
+              <h3>Order Summary</h3>
               <div className="order-items">
                 {Object.keys(selectedItems).length === 0 ? (
-                  <p className="empty-cart">Chưa có món nào được chọn</p>
+                  <p className="empty-cart">No items selected yet</p>
                 ) : (
                   Object.values(selectedItems).map((item, index) => (
                     <div key={index} className="order-item">
@@ -420,7 +422,7 @@ function Booking() {
               </div>
               <div className="order-total">
                 <strong>
-                  Tổng Tiền: <span>{formatPrice(calculateTotal())}</span> đ
+                  Total: <span>{formatPrice(calculateTotal())} đ</span>
                 </strong>
               </div>
             </div>
@@ -430,7 +432,7 @@ function Booking() {
               className="btn btn-primary btn-large btn-submit"
               disabled={submitting}
             >
-              {submitting ? 'Đang gửi...' : 'Gửi Đơn Hàng Qua Formsheet'}
+              {submitting ? 'Sending...' : 'Send Order via Formsheet'}
             </button>
           </form>
         </div>
@@ -438,7 +440,7 @@ function Booking() {
 
       <footer className="footer">
         <div className="container">
-          <p>&copy; 2024 Loli Bub. Tất cả quyền được bảo lưu.</p>
+          <p>&copy; 2024 Loli Bub. All rights reserved.</p>
         </div>
       </footer>
     </div>

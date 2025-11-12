@@ -39,7 +39,7 @@ export const CartProvider = ({ children }) => {
         }
       ];
     });
-    // Removed: setShowCart(true) - Giỏ hàng chỉ mở khi user click vào icon
+    // Removed: setShowCart(true) - The cart opens only when the user clicks the icon
   };
 
   const removeFromCart = (itemId) => {

@@ -26,7 +26,7 @@ function ContactForm() {
     setError(null);
 
     if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
-      setError('Vui lòng điền đầy đủ thông tin trước khi gửi.');
+      setError('Please complete all fields before submitting.');
       return;
     }
 
@@ -54,10 +54,10 @@ function ContactForm() {
         return;
       }
 
-      setError(payload?.message || 'Không thể gửi đơn hàng. Vui lòng thử lại sau.');
+      setError(payload?.message || 'Unable to send your request. Please try again later.');
     } catch (err) {
       console.error('Formcarry error:', err);
-      setError(err?.message || 'Không thể gửi đơn hàng. Vui lòng thử lại sau.');
+      setError(err?.message || 'Unable to send your request. Please try again later.');
     } finally {
       setSubmitting(false);
     }
@@ -66,8 +66,8 @@ function ContactForm() {
   if (submitted) {
     return (
       <div className="contact-form-success">
-        <h3>Cảm ơn bạn!</h3>
-        <p>Thông tin của bạn đã được gửi. Chúng tôi sẽ phản hồi trong thời gian sớm nhất.</p>
+        <h3>Thank you!</h3>
+        <p>Your details have been sent. We'll respond as soon as possible.</p>
         <button
           type="button"
           className="btn btn-primary"
@@ -76,7 +76,7 @@ function ContactForm() {
             setError(null);
           }}
         >
-          Gửi thêm yêu cầu
+          Send another request
         </button>
       </div>
     );
@@ -85,12 +85,12 @@ function ContactForm() {
   return (
     <form className="contact-form" onSubmit={handleSubmit} noValidate>
       <div className="form-row">
-        <label htmlFor="name">Tên của bạn</label>
+        <label htmlFor="name">Your Name</label>
         <input
           id="name"
           type="text"
           name="name"
-          placeholder="Nhập họ và tên"
+          placeholder="Enter your full name"
           value={formData.name}
           onChange={handleChange}
           required
@@ -103,7 +103,7 @@ function ContactForm() {
           id="email"
           type="email"
           name="email"
-          placeholder="Nhập email để nhận phản hồi"
+          placeholder="Enter your email for a reply"
           value={formData.email}
           onChange={handleChange}
           required
@@ -111,12 +111,12 @@ function ContactForm() {
       </div>
 
       <div className="form-row">
-        <label htmlFor="message">Nội dung</label>
+        <label htmlFor="message">Message</label>
         <textarea
           id="message"
           name="message"
           rows="5"
-          placeholder="Nhập yêu cầu hoặc ghi chú cho đơn hàng của bạn"
+          placeholder="Enter your request or any notes"
           value={formData.message}
           onChange={handleChange}
           required
@@ -130,7 +130,7 @@ function ContactForm() {
       )}
 
       <button type="submit" className="btn btn-primary" disabled={submitting}>
-        {submitting ? 'Đang gửi...' : 'Gửi Đơn'}
+        {submitting ? 'Sending...' : 'Submit'}
       </button>
     </form>
   );

@@ -3,6 +3,7 @@ import { useCart } from '../context/CartContext';
 import { submitOrder } from '../services/api';
 import './Cart.css';
 import { resolveDrinkImage } from '../utils/imageAssets';
+import { translateCategoryName } from '../utils/translations';
 
 function Cart() {
   const {
@@ -32,7 +33,7 @@ function Cart() {
 
   const handleCheckout = () => {
     if (cartItems.length === 0) {
-      setNotification({ type: 'error', message: 'Giỏ hàng trống!' });
+      setNotification({ type: 'error', message: 'Your cart is empty!' });
       return;
     }
     setShowCheckout(true);
@@ -58,7 +59,7 @@ function Cart() {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        setNotification({ type: 'error', message: 'Kích thước file không được vượt quá 5MB' });
+        setNotification({ type: 'error', message: 'File size must not exceed 5MB.' });
         return;
       }
       setFormData((prev) => ({ ...prev, paymentProof: file }));
@@ -76,12 +77,12 @@ function Cart() {
     e.preventDefault();
 
     if (cartItems.length === 0) {
-      setNotification({ type: 'error', message: 'Giỏ hàng trống!' });
+      setNotification({ type: 'error', message: 'Your cart is empty!' });
       return;
     }
 
     if (formData.paymentMethod === 'bank_transfer' && !formData.paymentProof) {
-      setNotification({ type: 'error', message: 'Vui lòng upload ảnh chứng từ chuyển khoản!' });
+      setNotification({ type: 'error', message: 'Please upload your transfer receipt image!' });
       return;
     }
 
@@ -109,12 +110,12 @@ function Cart() {
       const result = await submitOrder(orderFormData);
 
       if (!result?.success) {
-        throw new Error(result?.error || 'Đơn hàng chưa được gửi về email nhận thông báo');
+        throw new Error(result?.error || 'The order could not be delivered to the notification inbox.');
       }
 
       setNotification({
         type: 'success',
-        message: 'Đơn hàng đã được gửi thành công! Thông tin đã được gửi đến Formsheet.'
+        message: 'Order sent successfully! Details have been delivered to Formsheet.'
       });
 
       // Reset form and cart
@@ -140,7 +141,7 @@ function Cart() {
         message:
           error.response?.data?.error ||
           error.message ||
-          'Có lỗi xảy ra khi gửi đơn hàng'
+          'Something went wrong while submitting the order.'
       });
     } finally {
       setSubmitting(false);
@@ -152,13 +153,13 @@ function Cart() {
       <div className="cart-overlay" onClick={() => setShowCart(false)}>
         <div className="cart-panel" onClick={(e) => e.stopPropagation()}>
           <div className="cart-header">
-            <h3>Giỏ Hàng</h3>
+            <h3>Cart</h3>
             <button className="close-cart" onClick={() => setShowCart(false)}>×</button>
           </div>
           <div className="cart-empty">
-            <p>Giỏ hàng trống</p>
+            <p>Your cart is empty</p>
             <button className="btn btn-primary" onClick={() => setShowCart(false)}>
-              Tiếp Tục Mua Sắm
+              Continue Shopping
             </button>
           </div>
         </div>
@@ -176,7 +177,7 @@ function Cart() {
         )}
 
         <div className="cart-header">
-          <h3>{showCheckout ? 'Thanh Toán' : 'Giỏ Hàng'}</h3>
+          <h3>{showCheckout ? 'Checkout' : 'Cart'}</h3>
           <button className="close-cart" onClick={() => {
             setShowCart(false);
             setShowCheckout(false);
@@ -197,7 +198,7 @@ function Cart() {
                       />
                     </div>
                     <div className="cart-item-info">
-                      <div className="cart-item-category">{item.category}</div>
+                      <div className="cart-item-category">{translateCategoryName(item.category)}</div>
                     </div>
                     <div className="cart-item-controls">
                       <button
@@ -227,64 +228,64 @@ function Cart() {
 
             <div className="cart-footer">
               <div className="cart-total">
-                <strong>Tổng Tiền: {formatPrice(getTotalPrice())} đ</strong>
+                <strong>Total: {formatPrice(getTotalPrice())} đ</strong>
               </div>
               <button className="btn btn-primary btn-checkout" onClick={handleCheckout}>
-                Thanh Toán
+                Go to Checkout
               </button>
             </div>
           </>
         ) : (
           <form className="checkout-form" onSubmit={handleSubmit} method="POST">
             <div className="form-group">
-              <label htmlFor="checkout-name">Họ và Tên *</label>
+              <label htmlFor="checkout-name">Full Name *</label>
               <input
                 type="text"
                 id="checkout-name"
                 required
                 value={formData.customerName}
                 onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                placeholder="Nhập họ và tên"
+                placeholder="Enter your full name"
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="checkout-phone">Số Điện Thoại *</label>
+              <label htmlFor="checkout-phone">Phone Number *</label>
               <input
                 type="tel"
                 id="checkout-phone"
                 required
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="Nhập số điện thoại"
+                placeholder="Enter your phone number"
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="checkout-address">Địa Chỉ Giao Hàng *</label>
+              <label htmlFor="checkout-address">Delivery Address *</label>
               <textarea
                 id="checkout-address"
                 rows="3"
                 required
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                placeholder="Nhập địa chỉ giao hàng"
+                placeholder="Enter delivery address"
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="checkout-note">Ghi Chú</label>
+              <label htmlFor="checkout-note">Notes</label>
               <textarea
                 id="checkout-note"
                 rows="2"
                 value={formData.note}
                 onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-                placeholder="Ghi chú thêm (nếu có)"
+                placeholder="Additional notes (optional)"
               />
             </div>
 
             <div className="checkout-summary">
-              <h4>Đơn Hàng:</h4>
+              <h4>Order:</h4>
               {cartItems.map((item) => (
                 <div key={item.id} className="summary-item">
                   <span>{item.name} x{item.quantity}</span>
@@ -292,12 +293,12 @@ function Cart() {
                 </div>
               ))}
               <div className="summary-total">
-                <strong>Tổng: {formatPrice(getTotalPrice())} đ</strong>
+                <strong>Total: {formatPrice(getTotalPrice())} đ</strong>
               </div>
             </div>
 
             <div className="payment-section">
-              <h4>Thanh Toán</h4>
+              <h4>Payment</h4>
               <div className="payment-method-options">
                 <label
                   className={`payment-method-option ${formData.paymentMethod === 'bank_transfer' ? 'active' : ''}`}
@@ -309,8 +310,8 @@ function Cart() {
                     checked={formData.paymentMethod === 'bank_transfer'}
                     onChange={() => handlePaymentMethodChange('bank_transfer')}
                   />
-                  <span className="payment-method-title">Chuyển khoản</span>
-                  <span className="payment-method-desc">Quét mã QR và tải chứng từ chuyển khoản</span>
+                  <span className="payment-method-title">Bank transfer</span>
+                  <span className="payment-method-desc">Scan the QR code and upload the transfer receipt</span>
                 </label>
 
                 <label
@@ -323,29 +324,29 @@ function Cart() {
                     checked={formData.paymentMethod === 'cash'}
                     onChange={() => handlePaymentMethodChange('cash')}
                   />
-                  <span className="payment-method-title">Tiền mặt</span>
-                  <span className="payment-method-desc">Thanh toán trực tiếp khi nhận hàng</span>
+                  <span className="payment-method-title">Cash</span>
+                  <span className="payment-method-desc">Pay directly when you receive the order</span>
                 </label>
               </div>
 
               {formData.paymentMethod === 'bank_transfer' ? (
                 <>
                   <div className="qr-code-section">
-                    <p className="qr-instruction">Vui lòng quét mã QR để chuyển khoản:</p>
+                    <p className="qr-instruction">Please scan the QR code to transfer:</p>
                     <div className="qr-code-wrapper">
                       <img 
                         src="/images/qr-code.jpg" 
-                        alt="QR Code Chuyển Khoản" 
+                        alt="Bank Transfer QR Code" 
                         className="qr-code-image"
                       />
                     </div>
-                    <p className="qr-amount">Số tiền: <strong>{formatPrice(getTotalPrice())} đ</strong></p>
+                    <p className="qr-amount">Amount: <strong>{formatPrice(getTotalPrice())} đ</strong></p>
                   </div>
 
                   <div className="form-group">
                     <label htmlFor="payment-proof">
-                      Upload Ảnh Chứng Từ Chuyển Khoản
-                      <span className="required-note">(Bắt buộc khi chuyển khoản)</span>
+                      Upload Bank Transfer Receipt
+                      <span className="required-note">(Required for bank transfers)</span>
                     </label>
                     <div className="file-upload-wrapper">
                       <input
@@ -357,12 +358,12 @@ function Cart() {
                         required={formData.paymentMethod === 'bank_transfer'}
                       />
                       <label htmlFor="payment-proof" className="file-label">
-                        {paymentProofPreview ? '✓ Đã chọn ảnh' : 'Chọn ảnh chứng từ'}
+                        {paymentProofPreview ? '✓ Image selected' : 'Choose receipt image'}
                       </label>
                     </div>
                     {paymentProofPreview && (
                       <div className="payment-proof-preview">
-                        <img src={paymentProofPreview} alt="Chứng từ chuyển khoản" />
+                        <img src={paymentProofPreview} alt="Transfer receipt preview" />
                         <button
                           type="button"
                           className="remove-image-btn"
@@ -375,14 +376,14 @@ function Cart() {
                         </button>
                       </div>
                     )}
-                    <p className="file-note">Chấp nhận: JPG, PNG, GIF (tối đa 5MB)</p>
+                    <p className="file-note">Accepted formats: JPG, PNG, GIF (max 5MB)</p>
                   </div>
                 </>
               ) : (
                 <div className="cash-payment-note">
                   <p>
-                    Bạn sẽ thanh toán bằng tiền mặt khi nhận hàng. Vui lòng chuẩn bị số tiền{' '}
-                    <strong>{formatPrice(getTotalPrice())} đ</strong> để tiện cho việc giao nhận.
+                    You will pay in cash upon delivery. Please prepare{' '}
+                    <strong>{formatPrice(getTotalPrice())} đ</strong> for a smooth handoff.
                   </p>
                 </div>
               )}
@@ -390,7 +391,7 @@ function Cart() {
 
             <div className="checkout-actions">
               <button
-                  type="button"
+                type="button"
                 className="btn btn-secondary"
                 onClick={() => {
                   setShowCheckout(false);
@@ -398,7 +399,7 @@ function Cart() {
                   setFormData((prev) => ({ ...prev, paymentProof: null }));
                 }}
               >
-                Quay Lại
+                Go Back
               </button>
               <button
                 type="submit"
@@ -407,7 +408,7 @@ function Cart() {
                   submitting || (formData.paymentMethod === 'bank_transfer' && !formData.paymentProof)
                 }
               >
-                {submitting ? 'Đang gửi...' : 'Xác Nhận Đơn Hàng'}
+                {submitting ? 'Sending...' : 'Confirm Order'}
               </button>
             </div>
           </form>
