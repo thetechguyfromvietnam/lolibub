@@ -335,7 +335,7 @@ function Cart() {
                     <p className="qr-instruction">Please scan the QR code to transfer:</p>
                     <div className="qr-code-wrapper">
                       <img 
-                        src="/images/qr-code.jpg" 
+                        src="/images/ma-qr-chuyen-khoan.jpg" 
                         alt="Bank Transfer QR Code" 
                         className="qr-code-image"
                       />
